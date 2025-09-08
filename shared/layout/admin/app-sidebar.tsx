@@ -46,7 +46,7 @@ import { authClient } from '@/auth-client';
 import { Session } from 'better-auth';
 
 
-export default function AppSidebar({ session }: { session: Session }) {
+export default function AppSidebar({ sessionData }: { sessionData: any }) {
   const router = useRouter();
   const pathname = usePathname();
   //const { state, isMobile } = useSidebar();
@@ -159,19 +159,19 @@ export default function AppSidebar({ session }: { session: Session }) {
                 >
                   <Avatar className='rounded-lg w-8 h-8'>
                     <AvatarImage
-                      src={session?.user?.image || ''}
-                      alt={session?.user?.name || ''}
+                      src={sessionData?.user?.image || ''}
+                      alt={sessionData?.user?.name || ''}
                     />
                     <AvatarFallback className='rounded-lg'>
-                      {session?.user?.name?.slice(0, 2)?.toUpperCase() || 'CN'}
+                      {sessionData?.user?.name?.slice(0, 2)?.toUpperCase() || 'CN'}
                     </AvatarFallback>
                   </Avatar>
                   <div className='flex-1 grid text-sm text-left leading-tight'>
                     <span className='font-semibold truncate'>
-                      {session?.user?.name || ''}
+                      {sessionData?.user?.name || ''}
                     </span>
                     <span className='text-xs truncate'>
-                      {session?.user?.email || ''}
+                      {sessionData?.user?.email || ''}
                     </span>
                   </div>
                   <ChevronsUpDown className='ml-auto size-4' />
@@ -187,22 +187,22 @@ export default function AppSidebar({ session }: { session: Session }) {
                   <div className='flex items-center gap-2 px-1 py-1.5 text-sm text-left'>
                     <Avatar className='rounded-lg w-8 h-8'>
                       <AvatarImage
-                        src={session?.user?.image || ''}
-                        alt={session?.user?.name || ''}
+                        src={sessionData?.user?.image || ''}
+                        alt={sessionData?.user?.name || ''}
                         className='rounded-full'
                       />
                       <AvatarFallback className='rounded-lg'>
-                        {session?.user?.name?.slice(0, 2)?.toUpperCase() ||
+                        {sessionData?.user?.name?.slice(0, 2)?.toUpperCase() ||
                           'CN'}
                       </AvatarFallback>
                     </Avatar>
                     <div className='flex-1 grid text-sm text-left leading-tight'>
                       <span className='font-semibold truncate'>
-                        {session?.user?.name || ''}
+                        {sessionData?.user?.name || ''}
                       </span>
                       <span className='text-xs truncate'>
                         {' '}
-                        {session?.user?.email || ''}
+                        {sessionData?.user?.email || ''}
                       </span>
                     </div>
                   </div>
