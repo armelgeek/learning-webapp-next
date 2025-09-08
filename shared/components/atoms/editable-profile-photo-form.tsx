@@ -90,7 +90,7 @@ export function EditableProfilePhotoForm({
         </div>
       </div>
 
-      {/* Upload Button */}
+      {/* Upload Button - Temporarily disabled for build
       {!disabled && !isLoading && (
         <div className="flex gap-2">
           <UploadButton<OurFileRouter, 'imageUploader'>
@@ -109,7 +109,6 @@ export function EditableProfilePhotoForm({
             }}
             className="ut-button:bg-primary ut-button:hover:bg-primary/90 ut-button:text-primary-foreground ut-button:rounded-md ut-button:px-4 ut-button:py-2 ut-button:text-sm ut-button:font-medium ut-button:flex ut-button:items-center ut-button:gap-2 ut-button:h-9"
           >
-            {/* Custom Upload Button Content */}
             {({ isUploading }) => (
               <>
                 <Upload className="w-4 h-4" />
@@ -118,7 +117,7 @@ export function EditableProfilePhotoForm({
             )}
           </UploadButton>
         </div>
-      )}
+      )} */}
     </form>
   );
 }
