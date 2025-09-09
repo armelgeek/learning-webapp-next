@@ -1,52 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Brain, MessageSquare } from 'lucide-react';
 
-// Mock data for demonstration
-const mockLessons = [
-  {
-    id: '1',
-    title: 'Basic Greetings',
-    language: 'spanish',
-    type: 'vocabulary',
-    difficultyLevel: 'beginner',
-    content: { text: 'Learn basic Spanish greetings' },
-    isActive: true,
-    order: 1,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    title: 'Present Tense',
-    language: 'spanish',
-    type: 'grammar',
-    difficultyLevel: 'beginner',
-    content: { text: 'Master Spanish present tense' },
-    isActive: true,
-    order: 2,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    title: 'Common Expressions',
-    language: 'spanish',
-    type: 'phrases',
-    difficultyLevel: 'intermediate',
-    content: { text: 'Essential Spanish phrases' },
-    isActive: true,
-    order: 3,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
+// Mock progress data
 const mockProgress = [
   { lessonId: '1', completed: true, score: 85 },
   { lessonId: '2', completed: false, score: 0 },
@@ -56,13 +17,34 @@ export default function LessonsPage() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredLessons = mockLessons.filter(lesson => {
-    if (selectedLanguage !== 'all' && lesson.language !== selectedLanguage) return false;
-    if (selectedType !== 'all' && lesson.type !== selectedType) return false;
-    if (selectedLevel !== 'all' && lesson.difficultyLevel !== selectedLevel) return false;
-    return true;
-  });
+  useEffect(() => {
+    const fetchLessons = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (selectedLanguage !== 'all') params.append('language', selectedLanguage);
+        if (selectedType !== 'all') params.append('type', selectedType);
+        if (selectedLevel !== 'all') params.append('difficultyLevel', selectedLevel);
+        
+        const response = await fetch(`/api/lessons?${params.toString()}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLessons(data);
+        } else {
+          console.error('Failed to fetch lessons');
+        }
+      } catch (error) {
+        console.error('Error fetching lessons:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLessons();
+  }, [selectedLanguage, selectedType, selectedLevel]);
 
   const getProgress = (lessonId: string) => {
     return mockProgress.find(p => p.lessonId === lessonId);
@@ -93,6 +75,16 @@ export default function LessonsPage() {
         return <BookOpen className="h-4 w-4" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading lessons...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -143,7 +135,7 @@ export default function LessonsPage() {
 
       {/* Lessons Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredLessons.map((lesson) => {
+        {lessons.map((lesson) => {
           const progress = getProgress(lesson.id);
           const isCompleted = progress?.completed ?? false;
 
@@ -192,6 +184,10 @@ export default function LessonsPage() {
                   <Button 
                     className="w-full" 
                     variant={isCompleted ? "outline" : "default"}
+                    onClick={() => {
+                      // For demo purposes, just show an alert
+                      alert(`Opening lesson: ${lesson.title}`);
+                    }}
                   >
                     {isCompleted ? 'Review Lesson' : 'Start Lesson'}
                   </Button>
@@ -202,7 +198,7 @@ export default function LessonsPage() {
         })}
       </div>
 
-      {filteredLessons.length === 0 && (
+      {lessons.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No lessons found matching your filters</p>
         </div>
