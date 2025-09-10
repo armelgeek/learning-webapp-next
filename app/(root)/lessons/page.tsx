@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Brain, MessageSquare } from 'lucide-react';
+import type { Lesson } from '@/features/lessons/config/lesson.types';
 
 // Mock progress data
 const mockProgress = [
@@ -17,7 +18,7 @@ export default function LessonsPage() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

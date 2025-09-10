@@ -9,3 +9,17 @@ export type LessonFilter = z.infer<typeof lessonFilterSchema>;
 export type LessonType = 'vocabulary' | 'grammar' | 'phrases';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
 export type Language = 'spanish' | 'french' | 'german' | 'italian' | 'portuguese' | 'japanese' | 'chinese';
+
+export interface Lesson {
+  id: string;
+  title: string;
+  language: Language;
+  type: LessonType;
+  content: LessonContent;
+  audioUrl?: string;
+  difficultyLevel: DifficultyLevel;
+  isActive: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

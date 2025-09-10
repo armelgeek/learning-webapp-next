@@ -3,10 +3,11 @@ import { getLessonByIdUseCase } from '@/features/lessons/domain/use-cases/get-le
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const result = await getLessonByIdUseCase(params.id);
+    const { id } = await params;
+    const result = await getLessonByIdUseCase(id);
     
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 404 });
