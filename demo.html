@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinguaLearn - Language Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .card-hover { transition: all 0.2s ease-in-out; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">🌐 LinguaLearn</h1>
+                </div>
+                <nav class="flex space-x-8">
+                    <a href="#lessons" class="text-gray-600 hover:text-gray-900 font-medium">Lessons</a>
+                    <a href="#progress" class="text-gray-600 hover:text-gray-900 font-medium">Progress</a>
+                    <a href="#quizzes" class="text-gray-600 hover:text-gray-900 font-medium">Quizzes</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-blue-50 to-indigo-100 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                Master New Languages Interactively
+            </h2>
+            <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                Learn vocabulary, grammar, and phrases through engaging lessons, track your progress, and practice daily with our intelligent quiz system.
+            </p>
+            <button onclick="scrollToLessons()" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Start Learning
+            </button>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+                <div class="p-6">
+                    <div class="text-3xl font-bold text-blue-600 mb-2" id="total-lessons">5</div>
+                    <div class="text-gray-600">Total Lessons</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-3xl font-bold text-green-600 mb-2" id="completed-lessons">1</div>
+                    <div class="text-gray-600">Completed</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-3xl font-bold text-yellow-600 mb-2" id="streak-days">3</div>
+                    <div class="text-gray-600">Day Streak</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-3xl font-bold text-purple-600 mb-2" id="words-learned">15</div>
+                    <div class="text-gray-600">Words Learned</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lessons Section -->
+    <section id="lessons" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Language Lessons</h3>
+                <p class="text-gray-600 max-w-2xl mx-auto">Choose from our interactive lessons to improve your language skills</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="mb-8 flex flex-wrap gap-4 justify-center">
+                <select id="language-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all">All Languages</option>
+                    <option value="spanish">Spanish</option>
+                    <option value="french">French</option>
+                    <option value="german">German</option>
+                </select>
+                <select id="type-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all">All Types</option>
+                    <option value="vocabulary">Vocabulary</option>
+                    <option value="grammar">Grammar</option>
+                    <option value="phrases">Phrases</option>
+                </select>
+                <select id="level-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all">All Levels</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select>
+            </div>
+
+            <!-- Lessons Grid -->
+            <div id="lessons-grid" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Lessons will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h4 class="text-2xl font-bold text-gray-900" id="quiz-title">Quiz: Basic Greetings</h4>
+                <button onclick="closeQuiz()" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div id="quiz-content">
+                <!-- Quiz content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample lesson data
+        const lessons = [
+            {
+                id: '1',
+                title: 'Basic Greetings',
+                language: 'spanish',
+                type: 'vocabulary',
+                difficultyLevel: 'beginner',
+                completed: true,
+                score: 85,
+                content: {
+                    vocabulary: [
+                        { word: 'Hola', translation: 'Hello', pronunciation: 'OH-lah' },
+                        { word: 'Buenos días', translation: 'Good morning', pronunciation: 'BWAY-nohs DEE-ahs' },
+                        { word: 'Buenas tardes', translation: 'Good afternoon', pronunciation: 'BWAY-nahs TAR-dehs' },
+                        { word: 'Adiós', translation: 'Goodbye', pronunciation: 'ah-DYOHS' },
+                    ]
+                }
+            },
+            {
+                id: '2',
+                title: 'Numbers 1-20',
+                language: 'spanish',
+                type: 'vocabulary',
+                difficultyLevel: 'beginner',
+                completed: false,
+                content: {
+                    vocabulary: [
+                        { word: 'uno', translation: 'one', pronunciation: 'OO-noh' },
+                        { word: 'dos', translation: 'two', pronunciation: 'dohs' },
+                        { word: 'tres', translation: 'three', pronunciation: 'trehs' },
+                        { word: 'cinco', translation: 'five', pronunciation: 'SEEN-koh' },
+                    ]
+                }
+            },
+            {
+                id: '3',
+                title: 'Present Tense - Regular Verbs',
+                language: 'spanish',
+                type: 'grammar',
+                difficultyLevel: 'beginner',
+                completed: false,
+                content: {
+                    grammarRules: [
+                        'AR verbs: -o, -as, -a, -amos, -áis, -an',
+                        'ER verbs: -o, -es, -e, -emos, -éis, -en',
+                        'IR verbs: -o, -es, -e, -imos, -ís, -en',
+                    ]
+                }
+            },
+            {
+                id: '4',
+                title: 'Family Members',
+                language: 'spanish',
+                type: 'vocabulary',
+                difficultyLevel: 'beginner',
+                completed: false,
+                content: {
+                    vocabulary: [
+                        { word: 'familia', translation: 'family', pronunciation: 'fah-MEE-lyah' },
+                        { word: 'padre', translation: 'father', pronunciation: 'PAH-dreh' },
+                        { word: 'madre', translation: 'mother', pronunciation: 'MAH-dreh' },
+                        { word: 'hermano', translation: 'brother', pronunciation: 'ehr-MAH-noh' },
+                    ]
+                }
+            },
+            {
+                id: '5',
+                title: 'Common Expressions',
+                language: 'spanish',
+                type: 'phrases',
+                difficultyLevel: 'beginner',
+                completed: false,
+                content: {
+                    vocabulary: [
+                        { word: 'Por favor', translation: 'Please', pronunciation: 'por fah-VOR' },
+                        { word: 'Gracias', translation: 'Thank you', pronunciation: 'GRAH-thyahs' },
+                        { word: 'De nada', translation: 'You\'re welcome', pronunciation: 'deh NAH-dah' },
+                        { word: 'Perdón', translation: 'Excuse me/Sorry', pronunciation: 'per-DOHN' },
+                    ]
+                }
+            }
+        ];
+
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let quizScore = 0;
+
+        function getDifficultyBadgeClass(level) {
+            switch (level) {
+                case 'beginner': return 'bg-green-100 text-green-800';
+                case 'intermediate': return 'bg-yellow-100 text-yellow-800';
+                case 'advanced': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getTypeIcon(type) {
+            switch (type) {
+                case 'vocabulary': return '📚';
+                case 'grammar': return '🧠';
+                case 'phrases': return '💬';
+                default: return '📖';
+            }
+        }
+
+        function renderLessons() {
+            const grid = document.getElementById('lessons-grid');
+            const languageFilter = document.getElementById('language-filter').value;
+            const typeFilter = document.getElementById('type-filter').value;
+            const levelFilter = document.getElementById('level-filter').value;
+
+            let filteredLessons = lessons.filter(lesson => {
+                if (languageFilter !== 'all' && lesson.language !== languageFilter) return false;
+                if (typeFilter !== 'all' && lesson.type !== typeFilter) return false;
+                if (levelFilter !== 'all' && lesson.difficultyLevel !== levelFilter) return false;
+                return true;
+            });
+
+            grid.innerHTML = filteredLessons.map(lesson => `
+                <div class="bg-white rounded-lg shadow-sm border card-hover p-6 ${lesson.completed ? 'ring-2 ring-green-200 bg-green-50' : ''}">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${getTypeIcon(lesson.type)}</span>
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900">${lesson.title}</h4>
+                                <p class="text-sm text-gray-600 capitalize">${lesson.language} • ${lesson.type}</p>
+                            </div>
+                        </div>
+                        ${lesson.completed ? '<span class="bg-green-600 text-white px-2 py-1 rounded-full text-xs">✓ Complete</span>' : ''}
+                    </div>
+                    
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium capitalize ${getDifficultyBadgeClass(lesson.difficultyLevel)}">
+                            ${lesson.difficultyLevel}
+                        </span>
+                        ${lesson.completed && lesson.score ? `<span class="text-sm text-green-600 font-medium">Score: ${lesson.score}%</span>` : ''}
+                    </div>
+
+                    <button onclick="startLesson('${lesson.id}')" 
+                            class="w-full py-2 px-4 rounded-lg font-medium transition ${lesson.completed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'}">
+                        ${lesson.completed ? 'Review Lesson' : 'Start Lesson'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function startLesson(lessonId) {
+            const lesson = lessons.find(l => l.id === lessonId);
+            if (!lesson) return;
+
+            if (lesson.content.vocabulary) {
+                startQuiz(lesson);
+            } else {
+                alert(`Opening lesson: ${lesson.title}\\n\\nThis would contain the lesson content and interactive exercises.`);
+            }
+        }
+
+        function startQuiz(lesson) {
+            if (!lesson.content.vocabulary) return;
+
+            currentQuiz = lesson.content.vocabulary.map(item => ({
+                question: `What does "${item.word}" mean in English?`,
+                options: [item.translation, 'Option A', 'Option B', 'Option C'].sort(() => Math.random() - 0.5),
+                correct: item.translation,
+                explanation: `"${item.word}" means "${item.translation}" in English.`
+            }));
+            
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            
+            document.getElementById('quiz-title').textContent = `Quiz: ${lesson.title}`;
+            document.getElementById('quiz-modal').classList.remove('hidden');
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= currentQuiz.length) {
+                showQuizResults();
+                return;
+            }
+
+            const question = currentQuiz[currentQuestionIndex];
+            const content = document.getElementById('quiz-content');
+            
+            content.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm text-gray-500">Question ${currentQuestionIndex + 1} of ${currentQuiz.length}</span>
+                        <span class="text-sm text-blue-600">Score: ${quizScore}/${currentQuestionIndex}</span>
+                    </div>
+                    <h5 class="text-xl font-semibold text-gray-900 mb-6">${question.question}</h5>
+                    <div class="space-y-3">
+                        ${question.options.map((option, index) => `
+                            <button onclick="selectAnswer('${option}')" 
+                                    class="w-full p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition">
+                                ${option}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectAnswer(selectedAnswer) {
+            const question = currentQuiz[currentQuestionIndex];
+            const isCorrect = selectedAnswer === question.correct;
+            
+            if (isCorrect) {
+                quizScore++;
+            }
+
+            // Show feedback
+            const content = document.getElementById('quiz-content');
+            content.innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">${isCorrect ? '✅' : '❌'}</div>
+                    <h5 class="text-xl font-semibold mb-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}">
+                        ${isCorrect ? 'Correct!' : 'Incorrect'}
+                    </h5>
+                    <p class="text-gray-600 mb-6">${question.explanation}</p>
+                    <button onclick="nextQuestion()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        ${currentQuestionIndex + 1 >= currentQuiz.length ? 'See Results' : 'Next Question'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function showQuizResults() {
+            const percentage = Math.round((quizScore / currentQuiz.length) * 100);
+            const content = document.getElementById('quiz-content');
+            
+            content.innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h5 class="text-2xl font-bold text-gray-900 mb-2">Quiz Complete!</h5>
+                    <div class="text-4xl font-bold text-blue-600 mb-2">${percentage}%</div>
+                    <p class="text-gray-600 mb-6">You scored ${quizScore} out of ${currentQuiz.length} questions correctly!</p>
+                    <div class="flex gap-4 justify-center">
+                        <button onclick="closeQuiz()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition">
+                            Close
+                        </button>
+                        <button onclick="startQuiz(lessons[0])" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Update lesson completion status
+            const lessonId = document.getElementById('quiz-title').textContent.includes('Greetings') ? '1' : '2';
+            const lesson = lessons.find(l => l.id === lessonId);
+            if (lesson && percentage >= 70) {
+                lesson.completed = true;
+                lesson.score = percentage;
+                renderLessons();
+                updateStats();
+            }
+        }
+
+        function closeQuiz() {
+            document.getElementById('quiz-modal').classList.add('hidden');
+            currentQuiz = null;
+        }
+
+        function scrollToLessons() {
+            document.getElementById('lessons').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateStats() {
+            const completedCount = lessons.filter(l => l.completed).length;
+            document.getElementById('completed-lessons').textContent = completedCount;
+            
+            // Update words learned based on completed vocabulary lessons
+            let wordsLearned = 0;
+            lessons.filter(l => l.completed && l.content.vocabulary).forEach(lesson => {
+                wordsLearned += lesson.content.vocabulary.length;
+            });
+            document.getElementById('words-learned').textContent = wordsLearned;
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            renderLessons();
+            updateStats();
+
+            // Add event listeners for filters
+            document.getElementById('language-filter').addEventListener('change', renderLessons);
+            document.getElementById('type-filter').addEventListener('change', renderLessons);
+            document.getElementById('level-filter').addEventListener('change', renderLessons);
+        });
+    </script>
+</body>
+</html>
