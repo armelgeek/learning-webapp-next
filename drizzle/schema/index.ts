@@ -7,5 +7,7 @@ export {
   notifications,
   lessonTypeEnum,
   difficultyLevelEnum,
-  languageEnum
+  languageEnum,
+  quizTypeEnum,
+  notificationTypeEnum
 } from './lessons';

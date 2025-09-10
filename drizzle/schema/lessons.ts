@@ -6,6 +6,8 @@ import { users } from './auth';
 export const lessonTypeEnum = pgEnum('lesson_type', ['vocabulary', 'grammar', 'phrases']);
 export const difficultyLevelEnum = pgEnum('difficulty_level', ['beginner', 'intermediate', 'advanced']);
 export const languageEnum = pgEnum('language', ['spanish', 'french', 'german', 'italian', 'portuguese', 'japanese', 'chinese']);
+export const quizTypeEnum = pgEnum('quiz_type', ['multiple_choice', 'flashcard']);
+export const notificationTypeEnum = pgEnum('notification_type', ['reminder', 'achievement', 'new_lesson']);
 
 // Lessons table
 export const lessons = pgTable('lessons', {
@@ -35,7 +37,7 @@ export const quizzes = pgTable('quizzes', {
   question: text('question').notNull(),
   options: jsonb('options').notNull(), // Array of answer options
   correctAnswer: text('correct_answer').notNull(),
-  type: pgEnum('quiz_type', ['multiple_choice', 'flashcard'])('type').notNull().default('multiple_choice'),
+  type: quizTypeEnum('type').notNull().default('multiple_choice'),
   explanation: text('explanation'), // Optional explanation for the answer
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -86,7 +88,7 @@ export const notifications = pgTable('notifications', {
   userId: text('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  type: pgEnum('notification_type', ['reminder', 'achievement', 'new_lesson'])('type').notNull(),
+  type: notificationTypeEnum('type').notNull(),
   title: text('title').notNull(),
   message: text('message').notNull(),
   read: boolean('read').notNull().default(false),
