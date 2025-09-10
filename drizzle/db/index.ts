@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
 
 import * as schema from '@/drizzle/schema';
 
@@ -10,5 +10,7 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
-export const client = postgres(process.env.DATABASE_URL);
-export const db = drizzle(client, { schema });
+// Extract the path from sqlite: URL
+const dbPath = process.env.DATABASE_URL.replace('sqlite:', '');
+const sqlite = new Database(dbPath);
+export const db = drizzle(sqlite, { schema });
