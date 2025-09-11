@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import {
   createUserSchema,
   updateUserSchema,
@@ -9,7 +10,13 @@ import {
   banUserSchema,
   tableStateSchema,
 } from '@/features/auth/config/user.schema';
-import { CreateUserInput,UpdateUserInput,DeleteUserInput,BanUserInput, TableState} from '@/core/domain/types/admin/user.type';
+
+// Infer types from schemas
+type CreateUserInput = z.infer<typeof createUserSchema>;
+type UpdateUserInput = z.infer<typeof updateUserSchema>;
+type DeleteUserInput = z.infer<typeof deleteUserSchema>;
+type BanUserInput = z.infer<typeof banUserSchema>;
+type TableState = z.infer<typeof tableStateSchema>;
 
 interface UseAdminTableProps {
   onCreateUser: (data: CreateUserInput) => Promise<void>;

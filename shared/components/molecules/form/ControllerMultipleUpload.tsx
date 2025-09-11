@@ -34,7 +34,7 @@ export function ControlledMultipleUpload<T extends FieldValues = FieldValues>({
   const { field, fieldState } = useController<T>({
     control,
     name,
-    defaultValue: defaultValue || [],
+    defaultValue: defaultValue as any || [],
   });
 
   const ensureValidArray = () => {
