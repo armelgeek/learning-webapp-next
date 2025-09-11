@@ -7,18 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Brain, MessageSquare } from 'lucide-react';
 import type { Lesson } from '@/features/lessons/config/lesson.types';
-
-// Mock progress data
-const mockProgress = [
-  { lessonId: '1', completed: true, score: 85 },
-  { lessonId: '2', completed: false, score: 0 },
-];
+import type { UserProgress } from '@/features/progress/config/progress.types';
+import { useSession } from '@/auth-client';
 
 export default function LessonsPage() {
+  const { data: session } = useSession();
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,8 +45,31 @@ export default function LessonsPage() {
     fetchLessons();
   }, [selectedLanguage, selectedType, selectedLevel]);
 
+  // Fetch user progress when user session is available
+  useEffect(() => {
+    const fetchProgress = async () => {
+      if (!session?.user) return;
+      
+      try {
+        const response = await fetch('/api/progress');
+        if (response.ok) {
+          const progressData = await response.json();
+          setUserProgress(progressData);
+        } else {
+          console.error('Failed to fetch user progress');
+        }
+      } catch (error) {
+        console.error('Error fetching user progress:', error);
+      }
+    };
+
+    if (session?.user) {
+      fetchProgress();
+    }
+  }, [session?.user]);
+
   const getProgress = (lessonId: string) => {
-    return mockProgress.find(p => p.lessonId === lessonId);
+    return userProgress.find(p => p.lessonId === lessonId);
   };
 
   const getDifficultyColor = (level: string) => {
