@@ -24,7 +24,7 @@ export function ControllerCustomSelect<T extends FieldValues>({
   description,
   options,
   className,
-  defaultValue = [],
+  defaultValue,
 }: ControllerCustomSelectProps<T>) {
   const {
     field,
@@ -37,9 +37,9 @@ export function ControllerCustomSelect<T extends FieldValues>({
 
   const toggleOption = (option: string) => {
     const currentOptions = Array.isArray(field.value) ? field.value : [];
-    const newOptions = currentOptions.includes(option)
-      ? currentOptions.filter((o: string) => o !== option)
-      : [...currentOptions, option];
+    const newOptions = (currentOptions as string[]).includes(option)
+      ? (currentOptions as string[]).filter((o: string) => o !== option)
+      : [...(currentOptions as string[]), option];
     field.onChange(newOptions);
   };
 

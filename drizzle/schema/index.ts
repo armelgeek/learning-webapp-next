@@ -5,9 +5,21 @@ export {
   userProgress,
   userStats,
   notifications,
+  modules,
+  moduleLessons,
+  achievements,
+  userAchievements,
+  dailyChallenges,
+  userDailyChallenges,
+  forumCategories,
+  forumTopics,
+  forumReplies,
+  userMessages,
+  reviews,
   lessonTypeEnum,
   difficultyLevelEnum,
   languageEnum,
   quizTypeEnum,
-  notificationTypeEnum
+  notificationTypeEnum,
+  achievementTypeEnum
 } from './lessons';
