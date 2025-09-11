@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, text, timestamp, uuid, integer } from 'drizzle-orm/pg-core';
+import { languageEnum, difficultyLevelEnum } from './lessons';
 
 export const users = pgTable('users', {
   id: text('id')
@@ -9,6 +10,15 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').notNull(),
   image: text('image'),
+  // Extended profile fields for language learning
+  age: integer('age'),
+  nativeLanguage: languageEnum('native_language'),
+  targetLanguages: text('target_languages'), // JSON array of target languages
+  currentLevel: difficultyLevelEnum('current_level').default('beginner'),
+  learningGoal: text('learning_goal'), // User's learning objective
+  bio: text('bio'),
+  country: text('country'),
+  timezone: text('timezone'),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
   stripeCustomerId: text('stripe_customer_id')
