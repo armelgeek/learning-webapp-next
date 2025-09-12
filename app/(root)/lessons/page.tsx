@@ -5,19 +5,32 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Brain, MessageSquare } from 'lucide-react';
+import { BookOpen, Brain, MessageSquare, AlertCircle, Headphones, Volume2, FileText } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { Lesson } from '@/features/lessons/config/lesson.types';
 import type { UserProgress } from '@/features/progress/config/progress.types';
 import { useSession } from '@/auth-client';
+import { useUserLanguagePreferences } from '@/features/language/hooks/use-language-preferences';
+import { LANGUAGES, type LanguageKey } from '@/features/language/config/language.schema';
 
 export default function LessonsPage() {
   const { data: session } = useSession();
+  const { preferences, isLoading: preferencesLoading, error: preferencesError } = useUserLanguagePreferences(session?.user?.id);
+  
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Set default language to user's target language when preferences load
+  useEffect(() => {
+    if (preferences && preferences.targetLanguage && selectedLanguage === 'all') {
+      setSelectedLanguage(preferences.targetLanguage);
+    }
+  }, [preferences, selectedLanguage]);
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -93,17 +106,47 @@ export default function LessonsPage() {
         return <Brain className="h-4 w-4" />;
       case 'phrases':
         return <MessageSquare className="h-4 w-4" />;
+      case 'pronunciation':
+        return <Volume2 className="h-4 w-4" />;
+      case 'listening':
+        return <Headphones className="h-4 w-4" />;
+      case 'reading':
+        return <FileText className="h-4 w-4" />;
       default:
         return <BookOpen className="h-4 w-4" />;
     }
   };
 
-  if (loading) {
+  if (loading || preferencesLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading lessons...</p>
+        <div className="mb-8 space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96" />
         </div>
+        <div className="mb-6 flex flex-wrap gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-48" />
+          ))}
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-64" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (preferencesError && !preferences?.targetLanguage) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Unable to load your language preferences. Please set your target language in your profile settings.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -111,8 +154,18 @@ export default function LessonsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Language Lessons</h1>
-        <p className="text-muted-foreground">Choose from our interactive lessons to improve your language skills</p>
+        <h1 className="text-3xl font-bold mb-2">
+          {preferences?.targetLanguage 
+            ? `${LANGUAGES[preferences.targetLanguage as LanguageKey]?.name || 'Language'} Lessons ${LANGUAGES[preferences.targetLanguage as LanguageKey]?.flag || ''}` 
+            : 'Language Lessons'
+          }
+        </h1>
+        <p className="text-muted-foreground">
+          {preferences?.targetLanguage 
+            ? `Interactive lessons to improve your ${LANGUAGES[preferences.targetLanguage as LanguageKey]?.name || 'target language'} skills`
+            : 'Choose from our interactive lessons to improve your language skills'
+          }
+        </p>
       </div>
 
       {/* Filters */}
@@ -123,10 +176,11 @@ export default function LessonsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Languages</SelectItem>
-            <SelectItem value="spanish">Spanish</SelectItem>
-            <SelectItem value="french">French</SelectItem>
-            <SelectItem value="german">German</SelectItem>
-            <SelectItem value="italian">Italian</SelectItem>
+            {Object.entries(LANGUAGES).map(([key, language]) => (
+              <SelectItem key={key} value={key}>
+                {language.flag} {language.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -136,9 +190,12 @@ export default function LessonsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="vocabulary">Vocabulary</SelectItem>
-            <SelectItem value="grammar">Grammar</SelectItem>
-            <SelectItem value="phrases">Phrases</SelectItem>
+            <SelectItem value="vocabulary">📚 Vocabulary</SelectItem>
+            <SelectItem value="grammar">🧠 Grammar</SelectItem>
+            <SelectItem value="phrases">💬 Phrases</SelectItem>
+            <SelectItem value="pronunciation">🗣️ Pronunciation</SelectItem>
+            <SelectItem value="listening">👂 Listening</SelectItem>
+            <SelectItem value="reading">📖 Reading</SelectItem>
           </SelectContent>
         </Select>
 

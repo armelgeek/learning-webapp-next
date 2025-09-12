@@ -6,9 +6,9 @@ export type CreateLessonPayload = z.infer<typeof createLessonSchema>;
 export type UpdateLessonPayload = z.infer<typeof updateLessonSchema>;
 export type LessonFilter = z.infer<typeof lessonFilterSchema>;
 
-export type LessonType = 'vocabulary' | 'grammar' | 'phrases';
+export type LessonType = 'vocabulary' | 'grammar' | 'phrases' | 'pronunciation' | 'listening' | 'reading';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
-export type Language = 'spanish' | 'french' | 'german' | 'italian' | 'portuguese' | 'japanese' | 'chinese';
+export type Language = 'spanish' | 'french' | 'german' | 'italian' | 'portuguese' | 'japanese' | 'chinese' | 'english';
 
 export interface Lesson {
   id: string;

@@ -6,6 +6,7 @@ async function seedLessons() {
 
   // Sample lessons data
   const sampleLessons = [
+    // Spanish lessons
     {
       title: 'Basic Greetings',
       language: 'spanish' as const,
@@ -73,50 +74,175 @@ async function seedLessons() {
       order: 3,
     },
     {
-      title: 'Family Members',
+      title: 'Spanish Pronunciation Basics',
       language: 'spanish' as const,
-      type: 'vocabulary' as const,
+      type: 'pronunciation' as const,
       content: {
-        text: 'Learn vocabulary related to family members',
-        vocabulary: [
-          { word: 'familia', translation: 'family', pronunciation: 'fah-MEE-lyah' },
-          { word: 'padre', translation: 'father', pronunciation: 'PAH-dreh' },
-          { word: 'madre', translation: 'mother', pronunciation: 'MAH-dreh' },
-          { word: 'hermano', translation: 'brother', pronunciation: 'ehr-MAH-noh' },
-          { word: 'hermana', translation: 'sister', pronunciation: 'ehr-MAH-nah' },
-          { word: 'abuelo', translation: 'grandfather', pronunciation: 'ah-BWAY-loh' },
-          { word: 'abuela', translation: 'grandmother', pronunciation: 'ah-BWAY-lah' },
-        ],
+        text: 'Master the fundamentals of Spanish pronunciation',
         examples: [
-          'Mi familia es grande - My family is big',
-          'Tengo dos hermanos - I have two brothers',
-          'Mi abuela cocina muy bien - My grandmother cooks very well',
+          'RR - Rolled R: perro, carro',
+          'J/G - Harsh H sound: jefe, gente',
+          'LL - Y sound: llamar, calle',
+          'Ñ - NY sound: español, año',
         ]
       },
+      audioUrl: 'https://example.com/spanish-pronunciation.mp3',
       difficultyLevel: 'beginner' as const,
       order: 4,
     },
     {
-      title: 'Common Expressions',
+      title: 'Listening: Spanish Market',
       language: 'spanish' as const,
-      type: 'phrases' as const,
+      type: 'listening' as const,
       content: {
-        text: 'Essential Spanish phrases for everyday conversations',
+        text: 'Listen to a conversation at a Spanish market',
+        examples: [
+          'Practice understanding spoken Spanish in real contexts',
+          'Learn market vocabulary and phrases',
+        ]
+      },
+      audioUrl: 'https://example.com/spanish-market.mp3',
+      difficultyLevel: 'intermediate' as const,
+      order: 5,
+    },
+    
+    // French lessons
+    {
+      title: 'French Greetings',
+      language: 'french' as const,
+      type: 'vocabulary' as const,
+      content: {
+        text: 'Essential French greetings for daily conversations',
         vocabulary: [
-          { word: 'Por favor', translation: 'Please', pronunciation: 'por fah-VOR' },
-          { word: 'Gracias', translation: 'Thank you', pronunciation: 'GRAH-thyahs' },
-          { word: 'De nada', translation: 'You\'re welcome', pronunciation: 'deh NAH-dah' },
-          { word: 'Perdón', translation: 'Excuse me/Sorry', pronunciation: 'per-DOHN' },
-          { word: 'No entiendo', translation: 'I don\'t understand', pronunciation: 'noh en-TYEN-doh' },
+          { word: 'Bonjour', translation: 'Hello/Good morning', pronunciation: 'bon-ZHOOR' },
+          { word: 'Bonsoir', translation: 'Good evening', pronunciation: 'bon-SWAHR' },
+          { word: 'Salut', translation: 'Hi/Bye (informal)', pronunciation: 'sah-LUU' },
+          { word: 'Au revoir', translation: 'Goodbye', pronunciation: 'oh ruh-VWAHR' },
+          { word: 'Merci', translation: 'Thank you', pronunciation: 'mer-SEE' },
         ],
         examples: [
-          '¿Puedes ayudarme, por favor? - Can you help me, please?',
-          'Gracias por tu ayuda - Thank you for your help',
-          'Perdón, ¿dónde está el baño? - Excuse me, where is the bathroom?',
+          'Bonjour, comment allez-vous? - Hello, how are you?',
+          'Bonsoir madame - Good evening madam',
+          'Merci beaucoup - Thank you very much',
         ]
       },
       difficultyLevel: 'beginner' as const,
-      order: 5,
+      order: 1,
+    },
+    {
+      title: 'French Articles and Gender',
+      language: 'french' as const,
+      type: 'grammar' as const,
+      content: {
+        text: 'Understanding French articles and noun gender',
+        grammarRules: [
+          'Definite articles: le (masculine), la (feminine), les (plural)',
+          'Indefinite articles: un (masculine), une (feminine), des (plural)',
+          'Most nouns ending in -e are feminine',
+          'Most other nouns are masculine',
+        ],
+        examples: [
+          'le livre (the book - masculine)',
+          'la table (the table - feminine)',
+          'un chat (a cat - masculine)',
+          'une maison (a house - feminine)',
+        ]
+      },
+      difficultyLevel: 'beginner' as const,
+      order: 2,
+    },
+    
+    // German lessons
+    {
+      title: 'German Basic Greetings',
+      language: 'german' as const,
+      type: 'vocabulary' as const,
+      content: {
+        text: 'Learn essential German greetings',
+        vocabulary: [
+          { word: 'Hallo', translation: 'Hello', pronunciation: 'HAH-loh' },
+          { word: 'Guten Morgen', translation: 'Good morning', pronunciation: 'GOO-ten MOR-gen' },
+          { word: 'Guten Tag', translation: 'Good day', pronunciation: 'GOO-ten TAHK' },
+          { word: 'Auf Wiedersehen', translation: 'Goodbye', pronunciation: 'owf VEE-der-zayn' },
+          { word: 'Danke', translation: 'Thank you', pronunciation: 'DAHN-keh' },
+        ],
+        examples: [
+          'Hallo, wie geht es Ihnen? - Hello, how are you?',
+          'Guten Morgen, Herr Schmidt - Good morning, Mr. Schmidt',
+          'Danke schön - Thank you very much',
+        ]
+      },
+      difficultyLevel: 'beginner' as const,
+      order: 1,
+    },
+    
+    // Italian lessons
+    {
+      title: 'Italian Greetings',
+      language: 'italian' as const,
+      type: 'vocabulary' as const,
+      content: {
+        text: 'Master Italian greetings and basic courtesy',
+        vocabulary: [
+          { word: 'Ciao', translation: 'Hello/Goodbye (informal)', pronunciation: 'chow' },
+          { word: 'Buongiorno', translation: 'Good morning', pronunciation: 'bwohn-JOR-noh' },
+          { word: 'Buonasera', translation: 'Good evening', pronunciation: 'bwoh-nah-SEH-rah' },
+          { word: 'Arrivederci', translation: 'Goodbye', pronunciation: 'ah-ree-veh-DER-chee' },
+          { word: 'Grazie', translation: 'Thank you', pronunciation: 'GRAH-tsee-eh' },
+        ],
+        examples: [
+          'Ciao! Come stai? - Hi! How are you?',
+          'Buongiorno, signora - Good morning, madam',
+          'Grazie mille - Thank you very much',
+        ]
+      },
+      difficultyLevel: 'beginner' as const,
+      order: 1,
+    },
+    
+    // English lessons (for non-English speakers)
+    {
+      title: 'English Greetings',
+      language: 'english' as const,
+      type: 'vocabulary' as const,
+      content: {
+        text: 'Essential English greetings and introductions',
+        vocabulary: [
+          { word: 'Hello', translation: 'Salutation', pronunciation: 'heh-LOH' },
+          { word: 'Good morning', translation: 'Morning greeting', pronunciation: 'good MOR-ning' },
+          { word: 'How are you?', translation: 'Asking about wellbeing', pronunciation: 'how are you' },
+          { word: 'Nice to meet you', translation: 'First meeting phrase', pronunciation: 'nice to meet you' },
+          { word: 'Thank you', translation: 'Expression of gratitude', pronunciation: 'thank you' },
+        ],
+        examples: [
+          'Hello, my name is John',
+          'Good morning, how are you today?',
+          'Nice to meet you, Sarah',
+        ]
+      },
+      difficultyLevel: 'beginner' as const,
+      order: 1,
+    },
+    
+    // Advanced lessons
+    {
+      title: 'Business Spanish',
+      language: 'spanish' as const,
+      type: 'phrases' as const,
+      content: {
+        text: 'Professional Spanish phrases for business contexts',
+        vocabulary: [
+          { word: 'Reunión', translation: 'Meeting', pronunciation: 'ray-oo-NYOHN' },
+          { word: 'Proyecto', translation: 'Project', pronunciation: 'pro-YEK-toh' },
+          { word: 'Presupuesto', translation: 'Budget', pronunciation: 'pray-soo-PWEH-stoh' },
+        ],
+        examples: [
+          'Tenemos una reunión importante - We have an important meeting',
+          'El proyecto está en desarrollo - The project is in development',
+        ]
+      },
+      difficultyLevel: 'advanced' as const,
+      order: 10,
     },
   ];
 
