@@ -8,13 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const metadata: Metadata = { title: "Profile" };
 
 // Mock static actions for demo purposes
-const updateProfile = async (data: any) => {
+const updateProfile = async (data: Record<string, unknown>) => {
   console.log('Profile update:', data);
   // Simulate success
   return Promise.resolve();
 };
 
-const updateLearningGoals = async (data: any) => {
+const updateLearningGoals = async (data: Record<string, unknown>) => {
   console.log('Learning goals update:', data);
   // Simulate success
   return Promise.resolve();
