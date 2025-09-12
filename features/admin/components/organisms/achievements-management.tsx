@@ -95,7 +95,14 @@ export function AchievementsManagement() {
       // Update existing achievement
       setAchievements(achievements.map(a => 
         a.id === editingAchievement.id 
-          ? { ...a, ...achievementData }
+          ? {
+              ...a,
+              ...achievementData,
+              // Always store createdAt as string
+              createdAt: typeof (achievementData.createdAt ?? a.createdAt) === 'string'
+                ? (achievementData.createdAt ?? a.createdAt)
+                : (achievementData.createdAt ?? a.createdAt).toISOString(),
+            }
           : a
       ));
     } else {

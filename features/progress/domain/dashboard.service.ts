@@ -10,7 +10,7 @@ import {
   forumTopics,
   users
 } from '@/drizzle/schema';
-import { eq, desc, and, sql, count } from 'drizzle-orm';
+import { eq, desc, and, sql, count, gte, lt } from 'drizzle-orm';
 import type { LanguageKey } from '@/features/language/config/language.schema';
 
 export class DashboardService {
@@ -82,9 +82,10 @@ export class DashboardService {
         .having(sql`COUNT(CASE WHEN ${userProgress.completed} = true THEN 1 END) < COUNT(${moduleLessons.lessonId})`)
         .limit(5);
 
-      // Get daily challenge
+      // Get daily challenge - FIX: Création des dates pour la comparaison
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
       const todayChallenge = await db
         .select({
@@ -103,7 +104,8 @@ export class DashboardService {
         ))
         .where(
           and(
-            sql`DATE(${dailyChallenges.date}) = DATE(${today})`,
+            gte(dailyChallenges.date, startOfDay),
+            lt(dailyChallenges.date, endOfDay),
             eq(dailyChallenges.language, targetLanguage),
             eq(dailyChallenges.isActive, true)
           )
