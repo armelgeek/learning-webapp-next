@@ -20,21 +20,74 @@ export class LessonService {
       conditions.push(eq(lessons.isActive, filter.isActive));
     }
 
-    return await db
-      .select()
+    const result = await db
+      .select({
+        id: lessons.id,
+        title: lessons.title,
+        description: lessons.description,
+        language: lessons.language,
+        type: lessons.type,
+        content: lessons.content,
+        audioUrl: lessons.audioUrl,
+        videoUrl: lessons.videoUrl,
+        imageUrl: lessons.imageUrl,
+        difficultyLevel: lessons.difficultyLevel,
+        estimatedDuration: lessons.estimatedDuration,
+        pointsReward: lessons.pointsReward,
+        isActive: lessons.isActive,
+        order: lessons.order,
+        prerequisites: lessons.prerequisites,
+        tags: lessons.tags,
+        createdAt: lessons.createdAt,
+        updatedAt: lessons.updatedAt,
+      })
       .from(lessons)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(lessons.order, lessons.createdAt);
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return result.map(lesson => ({
+      ...lesson,
+      createdAt: lesson.createdAt?.toISOString() || null,
+      updatedAt: lesson.updatedAt?.toISOString() || null,
+    }));
   }
 
   static async getLessonById(id: string) {
     const result = await db
-      .select()
+      .select({
+        id: lessons.id,
+        title: lessons.title,
+        description: lessons.description,
+        language: lessons.language,
+        type: lessons.type,
+        content: lessons.content,
+        audioUrl: lessons.audioUrl,
+        videoUrl: lessons.videoUrl,
+        imageUrl: lessons.imageUrl,
+        difficultyLevel: lessons.difficultyLevel,
+        estimatedDuration: lessons.estimatedDuration,
+        pointsReward: lessons.pointsReward,
+        isActive: lessons.isActive,
+        order: lessons.order,
+        prerequisites: lessons.prerequisites,
+        tags: lessons.tags,
+        createdAt: lessons.createdAt,
+        updatedAt: lessons.updatedAt,
+      })
       .from(lessons)
       .where(eq(lessons.id, id))
       .limit(1);
     
-    return result[0] || null;
+    const lesson = result[0];
+    if (!lesson) return null;
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return {
+      ...lesson,
+      createdAt: lesson.createdAt?.toISOString() || null,
+      updatedAt: lesson.updatedAt?.toISOString() || null,
+    };
   }
 
   static async getLessonWithProgress(lessonId: string, userId: string) {

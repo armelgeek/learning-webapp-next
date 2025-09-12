@@ -4,64 +4,116 @@ import { ProfileForm } from '@/features/profile/components/organisms/profile-for
 import { LearningGoalsForm } from '@/features/profile/components/organisms/learning-goals-form';
 import { ProgressDashboard } from '@/features/profile/components/organisms/progress-dashboard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from '@/auth';
+import { db } from '@/drizzle/db';
+import { users } from '@/drizzle/schema';
+import { eq } from 'drizzle-orm';
+import { ProgressService } from '@/features/progress/domain/service';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 export const metadata: Metadata = { title: "Profile" };
 
-// Mock static actions for demo purposes
+// Update functions - these would be replaced with actual API calls in a full implementation
 const updateProfile = async (data: Record<string, unknown>) => {
   console.log('Profile update:', data);
-  // Simulate success
+  // TODO: Implement actual profile update API call
   return Promise.resolve();
 };
 
 const updateLearningGoals = async (data: Record<string, unknown>) => {
   console.log('Learning goals update:', data);
-  // Simulate success
+  // TODO: Implement actual learning goals update API call
   return Promise.resolve();
 };
 
-// Mock user stats - in real app, fetch from database
-const mockUserStats = {
-  streakDays: 7,
-  longestStreak: 15,
-  totalLessonsCompleted: 23,
-  totalWordsLearned: 156,
-  totalStudyTime: 480, // 8 hours
-  currentLevel: 'intermediate',
-  totalPoints: 2450,
-  weeklyPoints: 180,
-  monthlyPoints: 720,
-  level: 3,
-  experience: 75,
-  experienceToNextLevel: 100,
-  dailyGoal: 20,
-  weeklyGoal: 140,
-  lastPracticeDate: new Date().toISOString(),
-};
-
-// Mock today's and week's study time
-const todayStudyTime = 15; // minutes
-const weekStudyTime = 85; // minutes
-
 export default async function ProfilePage() {
-  // Mock static user data for demo
-  const user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    age: 25,
-    nativeLanguage: 'english',
-    targetLanguages: ['spanish', 'french'],
-    currentLevel: 'intermediate',
-    learningGoal: 'I want to become conversational in Spanish for my upcoming trip to Mexico.',
-    bio: 'Language enthusiast from California. Love traveling and meeting new people.',
-    country: 'United States',
-    timezone: 'PST',
+  // Get user session
+  const headersList = await headers();
+  const session = await auth.api.getSession({
+    headers: headersList,
+  });
+
+  if (!session?.user?.id) {
+    redirect('/auth/signin');
+  }
+
+  // Get user data from database
+  const userResult = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      image: users.image,
+      nativeLanguage: users.nativeLanguage,
+      targetLanguages: users.targetLanguages,
+      currentLevel: users.currentLevel,
+      learningGoal: users.learningGoal,
+      bio: users.bio,
+      country: users.country,
+      timezone: users.timezone,
+      age: users.age,
+    })
+    .from(users)
+    .where(eq(users.id, session.user.id))
+    .limit(1);
+
+  if (!userResult[0]) {
+    redirect('/auth/signin');
+  }
+
+  const user = userResult[0];
+
+  // Convert user data to match component interface
+  const userForForm = {
+    name: user.name,
+    email: user.email,
+    age: user.age || undefined, // Convert null to undefined
+    nativeLanguage: user.nativeLanguage || undefined,
+    targetLanguages: user.targetLanguages ? JSON.parse(user.targetLanguages) : undefined,
+    currentLevel: user.currentLevel || undefined,
+    learningGoal: user.learningGoal || undefined,
+    bio: user.bio || undefined,
+    country: user.country || undefined,
+    timezone: user.timezone || undefined,
   };
 
+  // Get user stats
+  const userStats = await ProgressService.getUserStats(session.user.id);
+
+  // TODO: Progress summary could be used for additional dashboard insights
+  // const progressSummary = await ProgressService.getProgressSummary(session.user.id);
+
+  // Prepare stats data with defaults if no stats exist
+  const stats = userStats ? {
+    ...userStats,
+    lastPracticeDate: userStats.lastPracticeDate || undefined, // Convert null to undefined
+  } : {
+    streakDays: 0,
+    longestStreak: 0,
+    totalLessonsCompleted: 0,
+    totalWordsLearned: 0,
+    totalStudyTime: 0,
+    currentLevel: 'beginner',
+    totalPoints: 0,
+    weeklyPoints: 0,
+    monthlyPoints: 0,
+    level: 1,
+    experience: 0,
+    experienceToNextLevel: 100,
+    dailyGoal: 15,
+    weeklyGoal: 105,
+    lastPracticeDate: undefined,
+  };
+
+  // Calculate today's study time (placeholder - could be calculated from recent activity)
+  const todayStudyTime = Math.min(stats.dailyGoal, 15); // Simulated based on daily goal
+  const weekStudyTime = Math.min(stats.weeklyGoal, stats.totalStudyTime); // Simulated
+
   const learningGoals = {
-    dailyGoal: mockUserStats.dailyGoal,
-    weeklyGoal: mockUserStats.weeklyGoal,
-    learningGoal: user.learningGoal,
+    dailyGoal: stats.dailyGoal,
+    weeklyGoal: stats.weeklyGoal,
+    learningGoal: userForForm.learningGoal || '',
   };
 
   return (
@@ -83,7 +135,7 @@ export default async function ProfilePage() {
 
         <TabsContent value="dashboard" className="space-y-6">
           <ProgressDashboard 
-            userStats={mockUserStats}
+            userStats={stats}
             todayStudyTime={todayStudyTime}
             weekStudyTime={weekStudyTime}
           />
@@ -91,7 +143,7 @@ export default async function ProfilePage() {
 
         <TabsContent value="profile" className="space-y-6">
           <ProfileForm 
-            user={user}
+            user={userForForm}
             onUpdate={updateProfile}
           />
         </TabsContent>

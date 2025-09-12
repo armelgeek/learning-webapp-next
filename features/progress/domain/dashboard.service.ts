@@ -124,6 +124,12 @@ export class DashboardService {
         .orderBy(desc(forumTopics.createdAt))
         .limit(5);
 
+      // Convert Date objects to ISO strings for JSON serialization
+      const serializedForumTopics = recentForumTopics.map(topic => ({
+        ...topic,
+        createdAt: topic.createdAt?.toISOString() || null,
+      }));
+
       // Calculate completion percentage
       const completedLessons = progressQuery.filter(p => p.completed).length;
       const totalLessonsForLanguage = await db
@@ -150,7 +156,7 @@ export class DashboardService {
           recentProgress: progressQuery,
           modulesInProgress,
           dailyChallenge: todayChallenge[0] || null,
-          recentForumTopics,
+          recentForumTopics: serializedForumTopics,
           completionPercentage,
           targetLanguage,
         },
