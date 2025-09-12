@@ -64,6 +64,20 @@ export default async function ProfilePage() {
 
   const user = userResult[0];
 
+  // Convert user data to match component interface
+  const userForForm = {
+    name: user.name,
+    email: user.email,
+    age: user.age || undefined, // Convert null to undefined
+    nativeLanguage: user.nativeLanguage || undefined,
+    targetLanguages: user.targetLanguages ? JSON.parse(user.targetLanguages) : undefined,
+    currentLevel: user.currentLevel || undefined,
+    learningGoal: user.learningGoal || undefined,
+    bio: user.bio || undefined,
+    country: user.country || undefined,
+    timezone: user.timezone || undefined,
+  };
+
   // Get user stats
   const userStats = await ProgressService.getUserStats(session.user.id);
 
@@ -71,7 +85,10 @@ export default async function ProfilePage() {
   // const progressSummary = await ProgressService.getProgressSummary(session.user.id);
 
   // Prepare stats data with defaults if no stats exist
-  const stats = userStats || {
+  const stats = userStats ? {
+    ...userStats,
+    lastPracticeDate: userStats.lastPracticeDate || undefined, // Convert null to undefined
+  } : {
     streakDays: 0,
     longestStreak: 0,
     totalLessonsCompleted: 0,
@@ -86,7 +103,7 @@ export default async function ProfilePage() {
     experienceToNextLevel: 100,
     dailyGoal: 15,
     weeklyGoal: 105,
-    lastPracticeDate: null,
+    lastPracticeDate: undefined,
   };
 
   // Calculate today's study time (placeholder - could be calculated from recent activity)
@@ -96,7 +113,7 @@ export default async function ProfilePage() {
   const learningGoals = {
     dailyGoal: stats.dailyGoal,
     weeklyGoal: stats.weeklyGoal,
-    learningGoal: user.learningGoal || '',
+    learningGoal: userForForm.learningGoal || '',
   };
 
   return (
@@ -126,7 +143,7 @@ export default async function ProfilePage() {
 
         <TabsContent value="profile" className="space-y-6">
           <ProfileForm 
-            user={user}
+            user={userForForm}
             onUpdate={updateProfile}
           />
         </TabsContent>

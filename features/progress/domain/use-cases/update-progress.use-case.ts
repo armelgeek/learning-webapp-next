@@ -14,7 +14,9 @@ export async function updateLessonProgressUseCase(data: CreateProgressPayload | 
         userId: data.userId,
         totalLessonsCompleted: (currentStats?.totalLessonsCompleted || 0) + 1,
         lastPracticeDate: today,
-        streakDays: ProgressService.calculateStreak(currentStats?.lastPracticeDate || undefined) + 1,
+        streakDays: ProgressService.calculateStreak(
+          currentStats?.lastPracticeDate ? new Date(currentStats.lastPracticeDate) : undefined
+        ) + 1,
       });
     }
 
@@ -37,7 +39,9 @@ export async function recordPracticeSessionUseCase(userId: string, wordsLearned?
       userId,
       totalWordsLearned: (currentStats?.totalWordsLearned || 0) + (wordsLearned || 0),
       lastPracticeDate: today,
-      streakDays: ProgressService.calculateStreak(currentStats?.lastPracticeDate || undefined) + 1,
+      streakDays: ProgressService.calculateStreak(
+        currentStats?.lastPracticeDate ? new Date(currentStats.lastPracticeDate) : undefined
+      ) + 1,
     });
 
     return { success: true, data: { message: 'Practice session recorded' } };
