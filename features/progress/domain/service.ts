@@ -11,17 +11,35 @@ export class ProgressService {
       conditions.push(eq(userProgress.lessonId, lessonId));
     }
 
-    return await db
-      .select()
+    const result = await db
+      .select({
+        id: userProgress.id,
+        userId: userProgress.userId,
+        lessonId: userProgress.lessonId,
+        completed: userProgress.completed,
+        score: userProgress.score,
+        attempts: userProgress.attempts,
+        completedAt: userProgress.completedAt,
+        createdAt: userProgress.createdAt,
+        updatedAt: userProgress.updatedAt,
+      })
       .from(userProgress)
       .where(and(...conditions))
       .orderBy(desc(userProgress.updatedAt));
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return result.map(progress => ({
+      ...progress,
+      completedAt: progress.completedAt?.toISOString() || null,
+      createdAt: progress.createdAt?.toISOString() || null,
+      updatedAt: progress.updatedAt?.toISOString() || null,
+    }));
   }
 
   static async createOrUpdateProgress(data: CreateProgressPayload | UpdateProgressPayload) {
     // Try to find existing progress
     const existing = await db
-      .select()
+      .select({ id: userProgress.id })
       .from(userProgress)
       .where(
         and(
@@ -42,9 +60,25 @@ export class ProgressService {
           updatedAt: new Date(),
         })
         .where(eq(userProgress.id, existing[0].id))
-        .returning();
+        .returning({
+          id: userProgress.id,
+          userId: userProgress.userId,
+          lessonId: userProgress.lessonId,
+          completed: userProgress.completed,
+          score: userProgress.score,
+          attempts: userProgress.attempts,
+          completedAt: userProgress.completedAt,
+          createdAt: userProgress.createdAt,
+          updatedAt: userProgress.updatedAt,
+        });
 
-      return result[0];
+      const progress = result[0];
+      return {
+        ...progress,
+        completedAt: progress.completedAt?.toISOString() || null,
+        createdAt: progress.createdAt?.toISOString() || null,
+        updatedAt: progress.updatedAt?.toISOString() || null,
+      };
     } else {
       // Create new progress
       const result = await db
@@ -56,10 +90,27 @@ export class ProgressService {
           createdAt: new Date(),
           updatedAt: new Date(),
         })
-        .returning();
+        .returning({
+          id: userProgress.id,
+          userId: userProgress.userId,
+          lessonId: userProgress.lessonId,
+          completed: userProgress.completed,
+          score: userProgress.score,
+          attempts: userProgress.attempts,
+          completedAt: userProgress.completedAt,
+          createdAt: userProgress.createdAt,
+          updatedAt: userProgress.updatedAt,
+        });
 
-      return result[0];
+      const progress = result[0];
+      return {
+        ...progress,
+        completedAt: progress.completedAt?.toISOString() || null,
+        createdAt: progress.createdAt?.toISOString() || null,
+        updatedAt: progress.updatedAt?.toISOString() || null,
+      };
     }
+  }
   }
 
   static async getUserStats(userId: string) {
