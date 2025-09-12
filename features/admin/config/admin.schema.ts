@@ -20,7 +20,7 @@ export const updateModuleSchema = createModuleSchema.extend({
 export const createQuizSchema = z.object({
   lessonId: z.string().min(1, "Lesson ID is required"),
   question: z.string().min(1, "Question is required").max(500, "Question too long"),
-  options: z.array(z.string()).min(2, "At least 2 options required").max(6, "Too many options"),
+  options: z.array(z.string().min(1, "Option cannot be empty")).min(2, "At least 2 options required").max(6, "Too many options"),
   correctAnswer: z.string().min(1, "Correct answer is required"),
   type: z.enum(['multiple_choice', 'flashcard', 'fill_blanks', 'translation', 'dictation', 'pronunciation']),
   explanation: z.string().max(500, "Explanation too long").optional(),

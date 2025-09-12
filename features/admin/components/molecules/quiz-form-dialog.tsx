@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Trash2 } from 'lucide-react';
 import {
@@ -68,16 +68,11 @@ export function QuizFormDialog({
     defaultValues: {
       lessonId: quiz?.lessonId || '',
       question: quiz?.question || '',
-      options: quiz?.options || ['', ''],
+      options: quiz?.options || ['Option 1', 'Option 2'],
       correctAnswer: quiz?.correctAnswer || '',
       type: quiz?.type || 'multiple_choice',
       explanation: quiz?.explanation || '',
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'options',
   });
 
   const onSubmit = (data: CreateQuizInput) => {
@@ -88,18 +83,6 @@ export function QuizFormDialog({
   const handleClose = () => {
     form.reset();
     onOpenChange(false);
-  };
-
-  const addOption = () => {
-    if (fields.length < 6) {
-      append('');
-    }
-  };
-
-  const removeOption = (index: number) => {
-    if (fields.length > 2) {
-      remove(index);
-    }
   };
 
   return (
@@ -190,53 +173,29 @@ export function QuizFormDialog({
             />
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <FormLabel>Answer Options</FormLabel>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addOption}
-                  disabled={fields.length >= 6}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Option
-                </Button>
-              </div>
-              
-              <div className="space-y-3">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-2">
-                    <FormField
-                      control={form.control}
-                      name={`options.${index}`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input
-                              placeholder={`Option ${index + 1}`}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {fields.length > 2 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeOption(index)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <FormLabel>Answer Options (Enter comma-separated values)</FormLabel>
+              <FormField
+                control={form.control}
+                name="options"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="Option 1, Option 2, Option 3, Option 4"
+                        value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                        onChange={(e) => {
+                          const options = e.target.value.split(',').map(opt => opt.trim()).filter(Boolean);
+                          field.onChange(options);
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Separate options with commas. Minimum 2 options required.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <FormField
