@@ -1,13 +1,119 @@
+'use client';
+
+import { useSession } from '@/auth-client';
+import { useUserLanguagePreferences } from '@/features/language/hooks/use-language-preferences';
+import { LanguageSelectionForm } from '@/features/language/components/organisms/language-selection-form';
+import { PersonalizedDashboard } from '@/features/dashboard/components/organisms/personalized-dashboard';
 import Hero from '@/shared/components/atoms/hero';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import type { LanguageSelection } from '@/features/language/config/language.schema';
+
 export default function Home() {
-  return (
-    <>
+  const { data: session, isPending: sessionLoading } = useSession();
+  const user = session?.user;
+  
+  const { 
+    preferences, 
+    isLoading: preferencesLoading, 
+    hasPreferences,
+    updatePreferences 
+  } = useUserLanguagePreferences(user?.id);
+
+  const handleLanguageSelection = async (selection: LanguageSelection) => {
+    if (!user?.id) return;
+    
+    try {
+      const result = await updatePreferences(selection);
+      if (result.success) {
+        toast.success('Language preferences saved! Welcome to your personalized learning experience.');
+      } else {
+        toast.error(result.error || 'Failed to save preferences');
+      }
+    } catch {
+      toast.error('An error occurred while saving your preferences');
+    }
+  };
+
+  // Show hero for non-authenticated users
+  if (!sessionLoading && !user) {
+    return (
       <Hero 
         title="Welcome to LinguaLearn!"
         subtitle="Master new languages with interactive lessons, quizzes, and progress tracking."
         ctaText="Start Learning"
-        ctaHref="/lessons"
+        ctaHref="/login"
       />
-    </>
+    );
+  }
+
+  // Show loading state
+  if (sessionLoading || preferencesLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-96" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show language selection if user hasn't set preferences
+  if (user && !hasPreferences) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Welcome to LinguaLearn, {user.name}!</h1>
+            <p className="text-muted-foreground">
+              Let&apos;s personalize your language learning experience
+            </p>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Language Setup</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LanguageSelectionForm 
+                onComplete={handleLanguageSelection}
+                initialSelection={preferences ? {
+                  nativeLanguage: preferences.nativeLanguage!,
+                  targetLanguage: preferences.targetLanguage!,
+                } : undefined}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Show personalized dashboard for users with language preferences
+  if (user && hasPreferences && preferences?.targetLanguage) {
+    return (
+      <PersonalizedDashboard
+        userId={user.id}
+        userName={user.name || 'Learner'}
+        targetLanguage={preferences.targetLanguage}
+      />
+    );
+  }
+
+  // Fallback
+  return (
+    <Hero 
+      title="Welcome to LinguaLearn!"
+      subtitle="Master new languages with interactive lessons, quizzes, and progress tracking."
+      ctaText="Start Learning"
+      ctaHref="/lessons"
+    />
   );
 }
