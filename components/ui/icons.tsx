@@ -1,6 +1,11 @@
 import {
   AlertTriangle,
   ArrowRight,
+  Award,
+  BarChart,
+  Bell,
+  BookOpen,
+  Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -9,6 +14,8 @@ import {
   CreditCard,
   File,
   FileText,
+  Folder,
+  FolderOpen,
   HelpCircle,
   Image,
   Laptop,
@@ -18,19 +25,26 @@ import {
   LucideIcon,
   LucideProps,
   LucideShoppingBag,
+  Mail,
+  MessageCircle,
+  MessageSquare,
   Moon,
   MoreVertical,
   Pizza,
   Plus,
   Settings,
+  Star,
   SunMedium,
   Trash,
+  TrendingUp,
   Twitter,
   User,
   UserCircle2Icon,
   UserPen,
+  Users,
   UserX2Icon,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -64,6 +78,23 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   laptop: Laptop,
+  // New admin icons
+  folderOpen: FolderOpen,
+  bookOpen: BookOpen,
+  fileText: FileText,
+  helpCircle: HelpCircle,
+  users: Users,
+  trendingUp: TrendingUp,
+  barChart: BarChart,
+  award: Award,
+  messageSquare: MessageSquare,
+  folder: Folder,
+  messageCircle: MessageCircle,
+  mail: Mail,
+  star: Star,
+  zap: Zap,
+  calendar: Calendar,
+  bell: Bell,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden='true'

@@ -48,6 +48,98 @@ export const navItems: NavItem[] = [
     isActive: false,
     shortcut: ['d', 'd'],
     items: []
+  },
+  {
+    title: 'Content Management',
+    url: '/d/content',
+    icon: 'folderOpen',
+    isActive: false,
+    items: [
+      {
+        title: 'Modules',
+        url: '/d/modules',
+        icon: 'bookOpen'
+      },
+      {
+        title: 'Lessons',
+        url: '/d/lessons',
+        icon: 'fileText'
+      },
+      {
+        title: 'Quizzes',
+        url: '/d/quizzes',
+        icon: 'helpCircle'
+      }
+    ]
+  },
+  {
+    title: 'User Management',
+    url: '/d/users',
+    icon: 'users',
+    isActive: false,
+    items: [
+      {
+        title: 'User Progress',
+        url: '/d/user-progress',
+        icon: 'trendingUp'
+      },
+      {
+        title: 'User Statistics',
+        url: '/d/user-stats',
+        icon: 'barChart'
+      },
+      {
+        title: 'Achievements',
+        url: '/d/achievements',
+        icon: 'award'
+      }
+    ]
+  },
+  {
+    title: 'Community',
+    url: '/d/community',
+    icon: 'messageSquare',
+    isActive: false,
+    items: [
+      {
+        title: 'Forum Categories',
+        url: '/d/forum-categories',
+        icon: 'folder'
+      },
+      {
+        title: 'Forum Topics',
+        url: '/d/forum-topics',
+        icon: 'messageCircle'
+      },
+      {
+        title: 'User Messages',
+        url: '/d/user-messages',
+        icon: 'mail'
+      },
+      {
+        title: 'Reviews',
+        url: '/d/reviews',
+        icon: 'star'
+      }
+    ]
+  },
+  {
+    title: 'Engagement',
+    url: '/d/engagement',
+    icon: 'zap',
+    isActive: false,
+    items: [
+      {
+        title: 'Daily Challenges',
+        url: '/d/daily-challenges',
+        icon: 'calendar'
+      },
+      {
+        title: 'Notifications',
+        url: '/d/notifications',
+        icon: 'bell'
+      }
+    ]
   }
 ];
 
