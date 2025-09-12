@@ -52,57 +52,109 @@ async function seedPlatformData() {
     const insertedAchievements = await db.insert(achievements).values(sampleAchievements).returning();
     console.log(`✅ Inserted ${insertedAchievements.length} achievements`);
 
-    // Sample modules
+    // Sample modules - organized for progressive unlocking
     const sampleModules = [
+      // Spanish progression
       {
-        title: 'Spanish Basics',
-        description: 'Essential Spanish for beginners',
+        title: 'Spanish Vocabulary Basics',
+        description: 'Essential Spanish words and phrases for beginners',
         language: 'spanish' as const,
         difficultyLevel: 'beginner' as const,
-        imageUrl: '/images/spanish-basics.jpg',
-        estimatedDuration: 180, // 3 hours
+        imageUrl: '/images/spanish-vocabulary.jpg',
+        estimatedDuration: 120, // 2 hours
         order: 1,
       },
       {
-        title: 'French Fundamentals',
-        description: 'Start your French learning journey',
+        title: 'Spanish Grammar Fundamentals',
+        description: 'Master basic Spanish grammar rules and structures',
+        language: 'spanish' as const,
+        difficultyLevel: 'beginner' as const,
+        imageUrl: '/images/spanish-grammar.jpg',
+        estimatedDuration: 180, // 3 hours
+        order: 2,
+      },
+      {
+        title: 'Spanish Phrases & Expressions',
+        description: 'Learn common Spanish phrases for everyday conversations',
+        language: 'spanish' as const,
+        difficultyLevel: 'beginner' as const,
+        imageUrl: '/images/spanish-phrases.jpg',
+        estimatedDuration: 150, // 2.5 hours
+        order: 3,
+      },
+      {
+        title: 'Spanish Pronunciation Practice',
+        description: 'Perfect your Spanish pronunciation and accent',
+        language: 'spanish' as const,
+        difficultyLevel: 'intermediate' as const,
+        imageUrl: '/images/spanish-pronunciation.jpg',
+        estimatedDuration: 120, // 2 hours
+        order: 4,
+      },
+      {
+        title: 'Spanish Listening Comprehension',
+        description: 'Improve your Spanish listening skills with real conversations',
+        language: 'spanish' as const,
+        difficultyLevel: 'intermediate' as const,
+        imageUrl: '/images/spanish-listening.jpg',
+        estimatedDuration: 200, // 3.3 hours
+        order: 5,
+      },
+      // French progression
+      {
+        title: 'French Vocabulary Essentials',
+        description: 'Build your French vocabulary foundation',
         language: 'french' as const,
         difficultyLevel: 'beginner' as const,
-        imageUrl: '/images/french-fundamentals.jpg',
-        estimatedDuration: 200, // 3.3 hours
+        imageUrl: '/images/french-vocabulary.jpg',
+        estimatedDuration: 130, // 2.2 hours
         order: 1,
       },
       {
-        title: 'German Grammar Essentials',
-        description: 'Master the basics of German grammar',
+        title: 'French Grammar Basics',
+        description: 'Learn the fundamentals of French grammar',
+        language: 'french' as const,
+        difficultyLevel: 'beginner' as const,
+        imageUrl: '/images/french-grammar.jpg',
+        estimatedDuration: 200, // 3.3 hours
+        order: 2,
+      },
+      {
+        title: 'French Conversation Starters',
+        description: 'Practice common French conversation topics',
+        language: 'french' as const,
+        difficultyLevel: 'intermediate' as const,
+        imageUrl: '/images/french-conversation.jpg',
+        estimatedDuration: 180, // 3 hours
+        order: 3,
+      },
+      // German progression
+      {
+        title: 'German Vocabulary Foundation',
+        description: 'Essential German words for beginners',
+        language: 'german' as const,
+        difficultyLevel: 'beginner' as const,
+        imageUrl: '/images/german-vocabulary.jpg',
+        estimatedDuration: 140, // 2.3 hours
+        order: 1,
+      },
+      {
+        title: 'German Grammar Structure',
+        description: 'Understanding German grammar and sentence structure',
         language: 'german' as const,
         difficultyLevel: 'beginner' as const,
         imageUrl: '/images/german-grammar.jpg',
         estimatedDuration: 240, // 4 hours
-        order: 1,
-      },
-      {
-        title: 'Italian Conversation',
-        description: 'Learn to speak Italian confidently',
-        language: 'italian' as const,
-        difficultyLevel: 'intermediate' as const,
-        imageUrl: '/images/italian-conversation.jpg',
-        estimatedDuration: 300, // 5 hours
         order: 2,
-      },
-      {
-        title: 'Business Spanish',
-        description: 'Professional Spanish for the workplace',
-        language: 'spanish' as const,
-        difficultyLevel: 'advanced' as const,
-        imageUrl: '/images/business-spanish.jpg',
-        estimatedDuration: 360, // 6 hours
-        order: 3,
       },
     ];
 
     const insertedModules = await db.insert(modules).values(sampleModules).returning();
     console.log(`✅ Inserted ${insertedModules.length} modules`);
+
+    // We'll need to create module-lesson relationships after lessons are created
+    // This will be done in the lessons seed or we can fetch existing lessons
+    console.log(`ℹ️  Module-lesson relationships will be created when lessons are available`);
 
     // Sample forum categories
     const sampleForumCategories = [
