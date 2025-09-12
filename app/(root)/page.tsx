@@ -5,6 +5,10 @@ import { useUserLanguagePreferences } from '@/features/language/hooks/use-langua
 import { LanguageSelectionForm } from '@/features/language/components/organisms/language-selection-form';
 import { PersonalizedDashboard } from '@/features/dashboard/components/organisms/personalized-dashboard';
 import Hero from '@/shared/components/atoms/hero';
+import { HomeFeaturesSection } from '@/shared/components/organisms/home-features-section';
+import { HowItWorksSection } from '@/shared/components/organisms/how-it-works-section';
+import { LanguagesSection } from '@/shared/components/organisms/languages-section';
+import { TestimonialsSection } from '@/shared/components/organisms/testimonials-section';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -36,15 +40,16 @@ export default function Home() {
     }
   };
 
-  // Show hero for non-authenticated users
+  // Show enhanced homepage for non-authenticated users
   if (!sessionLoading && !user) {
     return (
-      <Hero 
-        title="Welcome to LinguaLearn!"
-        subtitle="Master new languages with interactive lessons, quizzes, and progress tracking."
-        ctaText="Start Learning"
-        ctaHref="/login"
-      />
+      <div className="min-h-screen">
+        <Hero />
+        <HomeFeaturesSection />
+        <HowItWorksSection />
+        <LanguagesSection />
+        <TestimonialsSection />
+      </div>
     );
   }
 
@@ -107,13 +112,14 @@ export default function Home() {
     );
   }
 
-  // Fallback
+  // Fallback - show enhanced homepage
   return (
-    <Hero 
-      title="Welcome to LinguaLearn!"
-      subtitle="Master new languages with interactive lessons, quizzes, and progress tracking."
-      ctaText="Start Learning"
-      ctaHref="/lessons"
-    />
+    <div className="min-h-screen">
+      <Hero />
+      <HomeFeaturesSection />
+      <HowItWorksSection />
+      <LanguagesSection />
+      <TestimonialsSection />
+    </div>
   );
 }
