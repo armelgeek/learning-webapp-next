@@ -111,7 +111,6 @@ export class ProgressService {
       };
     }
   }
-  }
 
   static async getUserStats(userId: string) {
     const result = await db

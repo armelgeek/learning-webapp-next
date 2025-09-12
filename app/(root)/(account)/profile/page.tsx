@@ -10,6 +10,7 @@ import { users } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { ProgressService } from '@/features/progress/domain/service';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -28,8 +29,9 @@ const updateLearningGoals = async (data: Record<string, unknown>) => {
 
 export default async function ProfilePage() {
   // Get user session
+  const headersList = await headers();
   const session = await auth.api.getSession({
-    headers: {},
+    headers: headersList,
   });
 
   if (!session?.user?.id) {
