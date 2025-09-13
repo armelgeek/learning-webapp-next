@@ -14,63 +14,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { ForumCategoryFormDialog } from '../molecules/forum-category-form-dialog';
+import { useForumCategories, useDeleteForumCategory } from '../../hooks/use-forum-categories';
+import { toast } from 'sonner';
 
-// Mock data for demo
-const mockCategories = [
-  {
-    id: '1',
-    name: 'General Discussion',
-    description: 'General topics about language learning',
-    language: 'english',
-    color: '#3B82F6',
-    isActive: true,
-    order: 1,
-    topicsCount: 45,
-    postsCount: 234,
-    createdAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Spanish Help',
-    description: 'Get help with Spanish language questions',
-    language: 'spanish',
-    color: '#EF4444',
-    isActive: true,
-    order: 2,
-    topicsCount: 32,
-    postsCount: 156,
-    createdAt: '2024-01-10T09:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'French Grammar',
-    description: 'Discuss French grammar rules and exceptions',
-    language: 'french',
-    color: '#8B5CF6',
-    isActive: true,
-    order: 3,
-    topicsCount: 28,
-    postsCount: 178,
-    createdAt: '2024-01-05T08:00:00Z',
-  },
-  {
-    id: '4',
-    name: 'Off Topic',
-    description: 'Non-language related discussions',
-    language: null,
-    color: '#6B7280',
-    isActive: false,
-    order: 4,
-    topicsCount: 12,
-    postsCount: 67,
-    createdAt: '2024-01-01T08:00:00Z',
-  },
-];
-
-type ForumCategory = typeof mockCategories[0];
+type ForumCategory = {
+  id: string;
+  name: string;
+  description: string;
+  language: string | null;
+  color: string;
+  isActive: boolean;
+  order: number;
+  topicsCount: number;
+  postsCount: number;
+  createdAt: string;
+};
 
 export function ForumCategoriesManagement() {
-  const [categories, setCategories] = useState<ForumCategory[]>(mockCategories);
+  const { data: categories = [], isLoading, error } = useForumCategories();
+  const deleteForumCategory = useDeleteForumCategory();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ForumCategory | null>(null);
 
@@ -84,31 +46,21 @@ export function ForumCategoriesManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (categoryId: string) => {
+  const handleDelete = async (categoryId: string) => {
     if (confirm('Are you sure you want to delete this category? All topics and posts will be lost.')) {
-      setCategories(categories.filter(c => c.id !== categoryId));
+      try {
+        await deleteForumCategory.mutateAsync(categoryId);
+        toast.success('Forum category deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete forum category');
+        console.error('Error deleting forum category:', error);
+      }
     }
   };
 
   const handleSave = (categoryData: any) => {
-    if (editingCategory) {
-      // Update existing category
-      setCategories(categories.map(c => 
-        c.id === editingCategory.id 
-          ? { ...c, ...categoryData }
-          : c
-      ));
-    } else {
-      // Add new category
-      const newCategory = {
-        ...categoryData,
-        id: Date.now().toString(),
-        topicsCount: 0,
-        postsCount: 0,
-        createdAt: new Date().toISOString(),
-      };
-      setCategories([...categories, newCategory]);
-    }
+    // TODO: Implement save logic with API
+    console.log('Save forum category:', categoryData);
     setIsDialogOpen(false);
     setEditingCategory(null);
   };
@@ -223,6 +175,17 @@ export function ForumCategoriesManagement() {
     },
   ];
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load forum categories</p>
+          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <AdminDataTable
@@ -232,6 +195,7 @@ export function ForumCategoriesManagement() {
         columns={columns}
         onAdd={handleAdd}
         searchColumn="name"
+        isLoading={isLoading}
       />
       
       <ForumCategoryFormDialog

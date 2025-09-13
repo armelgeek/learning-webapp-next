@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,61 +12,43 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
+import { useAdminLessons, useDeleteLesson } from '../../hooks/use-admin-lessons';
+import { toast } from 'sonner';
 
-// Mock data for demo
-const mockLessons = [
-  {
-    id: '1',
-    title: 'Spanish Greetings',
-    description: 'Learn basic Spanish greetings and introductions',
-    language: 'spanish',
-    type: 'vocabulary',
-    difficultyLevel: 'beginner',
-    content: { text: 'Sample lesson content...', examples: [] },
-    audioUrl: 'https://example.com/audio.mp3',
-    videoUrl: 'https://example.com/video.mp4',
-    imageUrl: 'https://example.com/image.jpg',
-    estimatedDuration: 15,
-    pointsReward: 10,
-    isActive: true,
-    order: 1,
-    moduleTitle: 'Spanish Basics',
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z',
-  },
-  {
-    id: '2',
-    title: 'French Numbers 1-20',
-    description: 'Master French numbers from one to twenty',
-    language: 'french',
-    type: 'vocabulary',
-    difficultyLevel: 'beginner',
-    content: { text: 'Sample lesson content...', examples: [] },
-    audioUrl: null,
-    videoUrl: null,
-    imageUrl: null,
-    estimatedDuration: 20,
-    pointsReward: 15,
-    isActive: true,
-    order: 1,
-    moduleTitle: 'French Basics',
-    createdAt: '2024-01-10T09:00:00Z',
-    updatedAt: '2024-01-18T14:20:00Z',
-  },
-];
-
-type Lesson = typeof mockLessons[0];
+type Lesson = {
+  id: string;
+  title: string;
+  description: string;
+  language: string;
+  type: string;
+  difficultyLevel: string;
+  estimatedDuration: number;
+  pointsReward: number;
+  isActive: boolean;
+  order: number;
+  moduleTitle: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export function LessonsManagement() {
-  const [lessons, setLessons] = useState<Lesson[]>(mockLessons);
+  const { data: lessons = [], isLoading, error } = useAdminLessons();
+  const deleteLesson = useDeleteLesson();
 
   const handleEdit = (lesson: Lesson) => {
     console.log('Edit lesson:', lesson.id);
+    // TODO: Open edit dialog
   };
 
-  const handleDelete = (lessonId: string) => {
+  const handleDelete = async (lessonId: string) => {
     if (confirm('Are you sure you want to delete this lesson?')) {
-      setLessons(lessons.filter(l => l.id !== lessonId));
+      try {
+        await deleteLesson.mutateAsync(lessonId);
+        toast.success('Lesson deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete lesson');
+        console.error('Error deleting lesson:', error);
+      }
     }
   };
 
@@ -179,6 +160,17 @@ export function LessonsManagement() {
     },
   ];
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load lessons</p>
+          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AdminDataTable
       title="Lesson Content"
@@ -187,6 +179,7 @@ export function LessonsManagement() {
       columns={columns}
       onAdd={() => console.log('Add new lesson')}
       searchColumn="title"
+      isLoading={isLoading}
     />
   );
 }

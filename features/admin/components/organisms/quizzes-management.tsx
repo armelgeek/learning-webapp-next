@@ -14,51 +14,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { QuizFormDialog } from '../molecules/quiz-form-dialog';
+import { useAdminQuizzes, useDeleteQuiz } from '../../hooks/use-admin-quizzes';
+import { toast } from 'sonner';
 
-// Mock data for demo
-const mockQuizzes = [
-  {
-    id: '1',
-    lessonId: 'lesson-1',
-    lessonTitle: 'Spanish Greetings',
-    question: '¿Cómo se dice "Hello" en español?',
-    options: ['Hola', 'Adiós', 'Buenos días', 'Buenas noches'],
-    correctAnswer: 'Hola',
-    type: 'multiple_choice',
-    explanation: 'Hola is the most common way to say Hello in Spanish.',
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z',
-  },
-  {
-    id: '2',
-    lessonId: 'lesson-2',
-    lessonTitle: 'French Numbers',
-    question: 'How do you say "five" in French?',
-    options: ['quatre', 'cinq', 'six', 'sept'],
-    correctAnswer: 'cinq',
-    type: 'multiple_choice',
-    explanation: 'Cinq is the French word for five.',
-    createdAt: '2024-01-10T09:00:00Z',
-    updatedAt: '2024-01-18T14:20:00Z',
-  },
-  {
-    id: '3',
-    lessonId: 'lesson-3',
-    lessonTitle: 'German Articles',
-    question: 'What is the definite article for "Haus" (house)?',
-    options: ['der', 'die', 'das', 'den'],
-    correctAnswer: 'das',
-    type: 'multiple_choice',
-    explanation: 'Das is the definite article for neuter nouns like Haus.',
-    createdAt: '2024-01-05T08:00:00Z',
-    updatedAt: '2024-01-12T11:15:00Z',
-  },
-];
-
-type Quiz = typeof mockQuizzes[0];
+type Quiz = {
+  id: string;
+  lessonId: string;
+  lessonTitle: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  type: string;
+  explanation: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export function QuizzesManagement() {
-  const [quizzes, setQuizzes] = useState<Quiz[]>(mockQuizzes);
+  const { data: quizzes = [], isLoading, error } = useAdminQuizzes();
+  const deleteQuiz = useDeleteQuiz();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
 
@@ -72,31 +46,21 @@ export function QuizzesManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (quizId: string) => {
+  const handleDelete = async (quizId: string) => {
     if (confirm('Are you sure you want to delete this quiz?')) {
-      setQuizzes(quizzes.filter(q => q.id !== quizId));
+      try {
+        await deleteQuiz.mutateAsync(quizId);
+        toast.success('Quiz deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete quiz');
+        console.error('Error deleting quiz:', error);
+      }
     }
   };
 
   const handleSave = (quizData: any) => {
-    if (editingQuiz) {
-      // Update existing quiz
-      setQuizzes(quizzes.map(q => 
-        q.id === editingQuiz.id 
-          ? { ...q, ...quizData, updatedAt: new Date().toISOString() }
-          : q
-      ));
-    } else {
-      // Add new quiz
-      const newQuiz = {
-        ...quizData,
-        id: Date.now().toString(),
-        lessonTitle: 'Unknown Lesson', // In real app, fetch from API
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setQuizzes([...quizzes, newQuiz]);
-    }
+    // TODO: Implement save logic with API
+    console.log('Save quiz:', quizData);
     setIsDialogOpen(false);
     setEditingQuiz(null);
   };
@@ -200,6 +164,17 @@ export function QuizzesManagement() {
     },
   ];
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load quizzes</p>
+          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <AdminDataTable
@@ -209,6 +184,7 @@ export function QuizzesManagement() {
         columns={columns}
         onAdd={handleAdd}
         searchColumn="question"
+        isLoading={isLoading}
       />
       
       <QuizFormDialog
