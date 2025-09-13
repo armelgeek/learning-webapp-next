@@ -7,7 +7,7 @@ import {
   forumTopics,
   userProgress
 } from '@/drizzle/schema';
-import { count, sql, eq, desc } from 'drizzle-orm';
+import { count, sql, eq, desc, gte } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -24,7 +24,7 @@ export async function GET() {
     const activeUsersResult = await db
       .select({ count: sql<number>`COUNT(DISTINCT ${userProgress.userId})` })
       .from(userProgress)
-      .where(sql`${userProgress.updatedAt} >= ${thirtyDaysAgo}`);
+      .where(gte(userProgress.updatedAt, thirtyDaysAgo.toISOString()));
 
     // Get total achievements count
     const totalAchievementsResult = await db
@@ -77,7 +77,7 @@ export async function GET() {
     const recentUsersResult = await db
       .select({ count: count() })
       .from(users)
-      .where(sql`${users.createdAt} >= ${sevenDaysAgo}`);
+      .where(gte(users.createdAt, sevenDaysAgo.toISOString()));
 
     return NextResponse.json({
       success: true,
