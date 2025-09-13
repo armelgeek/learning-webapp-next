@@ -18,7 +18,7 @@ export function useModules(language: string) {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`/api/modules?language=${language}`);
+        const response = await fetch(`/api/modules-mock?language=${language}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch modules');
@@ -44,7 +44,7 @@ export function useModules(language: string) {
 
       try {
         setError(null);
-        const response = await fetch(`/api/modules?language=${language}`);
+        const response = await fetch(`/api/modules-mock?language=${language}`);
         if (!response.ok) {
           throw new Error('Failed to fetch modules');
         }
