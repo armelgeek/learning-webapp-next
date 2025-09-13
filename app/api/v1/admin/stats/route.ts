@@ -24,7 +24,7 @@ export async function GET() {
     const activeUsersResult = await db
       .select({ count: sql<number>`COUNT(DISTINCT ${userProgress.userId})` })
       .from(userProgress)
-      .where(gte(userProgress.updatedAt, thirtyDaysAgo.toISOString()));
+      .where(gte(userProgress.updatedAt, thirtyDaysAgo));
 
     // Get total achievements count
     const totalAchievementsResult = await db
