@@ -89,6 +89,26 @@ export function ModuleProgressionView({
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Master {languageName} step by step! Complete each module to unlock the next one in your learning journey.
         </p>
+        
+        {/* Learning Path Instructions */}
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-2xl mx-auto">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+              <Map className="h-4 w-4" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                How Progressive Learning Works
+              </h3>
+              <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                <li>🔓 <strong>Unlocked modules</strong> are ready to start</li>
+                <li>🔒 <strong>Locked modules</strong> need prerequisites completed first</li>
+                <li>✅ <strong>Completed modules</strong> unlock new content</li>
+                <li>📈 <strong>Progress tracking</strong> shows your learning journey</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Progress Stats */}
@@ -129,15 +149,24 @@ export function ModuleProgressionView({
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {modules.map((module, index) => (
-            <div key={module.id} className="relative">
+            <div key={module.id} className="relative group">
               {/* Connection Line for Desktop */}
               {index < modules.length - 1 && (
-                <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-border z-0" />
+                <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-border to-border/50 z-0">
+                  {/* Arrow indication */}
+                  <div className="absolute right-0 top-1/2 w-0 h-0 border-l-4 border-l-border border-t-2 border-t-transparent border-b-2 border-b-transparent transform -translate-y-1/2" />
+                </div>
               )}
               
               {/* Module Number Badge */}
-              <div className="absolute -top-3 -left-3 z-10 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                {index + 1}
+              <div className={`absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
+                module.status === 'completed'
+                  ? 'bg-green-600 text-white border-green-500 shadow-lg shadow-green-500/25'
+                  : module.status === 'unlocked'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25'
+                  : 'bg-gray-400 text-gray-200 border-gray-300'
+              }`}>
+                {module.status === 'completed' ? '✓' : index + 1}
               </div>
               
               <ModuleCard 
@@ -152,18 +181,18 @@ export function ModuleProgressionView({
       {/* Duolingo-style Encouragement */}
       {overallProgress > 0 && (
         <div className="text-center py-6">
-          <div className="inline-flex items-center gap-2 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 px-4 py-2 rounded-full">
-            <Trophy className="h-4 w-4" />
+          <div className="inline-flex items-center gap-2 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 px-6 py-3 rounded-full border border-green-200 dark:border-green-800">
+            <Trophy className="h-5 w-5" />
             <span className="text-sm font-medium">
               {overallProgress < 25 
-                ? "Great start! Keep going!" 
+                ? `Great start! You've completed ${completedLessons} lessons. Keep the momentum going!` 
                 : overallProgress < 50 
-                ? "You're making good progress!" 
+                ? `You're making excellent progress! ${completedModules} modules down, ${totalModules - completedModules} to go!` 
                 : overallProgress < 75 
-                ? "Halfway there! Don't give up!" 
+                ? `Halfway champion! You're mastering ${languageName} one step at a time!` 
                 : overallProgress < 100 
-                ? "Almost done! You've got this!" 
-                : "Congratulations! You've completed the learning path!"
+                ? `Almost there! Just ${totalModules - completedModules} more modules to complete your journey!` 
+                : `🎉 Congratulations! You've mastered the entire ${languageName} learning path!`
               }
             </span>
           </div>
