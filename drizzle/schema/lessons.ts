@@ -9,6 +9,7 @@ export const languageEnum = pgEnum('language', ['spanish', 'french', 'german', '
 export const quizTypeEnum = pgEnum('quiz_type', ['multiple_choice', 'flashcard', 'fill_blanks', 'translation', 'dictation', 'pronunciation']);
 export const notificationTypeEnum = pgEnum('notification_type', ['reminder', 'achievement', 'new_lesson', 'challenge', 'message']);
 export const achievementTypeEnum = pgEnum('achievement_type', ['streak', 'lessons_completed', 'perfect_score', 'daily_goal', 'weekly_goal']);
+export const moduleStatusEnum = pgEnum('module_status', ['locked', 'unlocked', 'completed']);
 
 // Lessons table
 export const lessons = pgTable('lessons', {
@@ -66,6 +67,24 @@ export const userProgress = pgTable('user_progress', {
   score: integer('score').default(0), // Score out of 100
   attempts: integer('attempts').notNull().default(0),
   completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// User module progress tracking
+export const userModuleProgress = pgTable('user_module_progress', {
+  id: text('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  moduleId: text('module_id')
+    .notNull()
+    .references(() => modules.id, { onDelete: 'cascade' }),
+  status: moduleStatusEnum('status').notNull().default('locked'),
+  completedAt: timestamp('completed_at'),
+  unlockedAt: timestamp('unlocked_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -129,6 +148,7 @@ export const modules = pgTable('modules', {
   isActive: boolean('is_active').notNull().default(true),
   order: integer('order').notNull().default(0),
   estimatedDuration: integer('estimated_duration'), // in minutes
+  prerequisites: jsonb('prerequisites'), // Array of module IDs that must be completed first
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

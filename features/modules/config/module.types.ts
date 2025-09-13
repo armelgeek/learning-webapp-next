@@ -7,6 +7,7 @@ export type ModuleFilter = z.infer<typeof moduleFilterSchema>;
 
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
 export type Language = 'spanish' | 'french' | 'german' | 'italian' | 'portuguese' | 'japanese' | 'chinese' | 'english';
+export type ModuleStatus = 'locked' | 'unlocked' | 'completed';
 
 export interface Module {
   id: string;
@@ -18,6 +19,7 @@ export interface Module {
   isActive: boolean;
   order: number;
   estimatedDuration: number | null;
+  prerequisites: string[] | null; // Array of module IDs
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +27,7 @@ export interface Module {
 export interface ModuleWithProgress extends Module {
   totalLessons: number;
   completedLessons: number;
+  status: ModuleStatus;
   isUnlocked: boolean;
   completionPercentage: number;
   lessons: Array<{
@@ -41,5 +44,8 @@ export interface ModuleProgress {
   totalLessons: number;
   completedLessons: number;
   completionPercentage: number;
+  status: ModuleStatus;
   isCompleted: boolean;
+  prerequisites: string[];
+  prerequisitesMet: boolean;
 }

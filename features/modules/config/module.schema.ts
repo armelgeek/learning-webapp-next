@@ -14,6 +14,7 @@ export const createModuleSchema = z.object({
   imageUrl: z.string().url().optional(),
   estimatedDuration: z.number().positive().optional(),
   order: z.number().default(0),
+  prerequisites: z.array(z.string()).optional(), // Array of module IDs
 });
 
 export const updateModuleSchema = createModuleSchema.partial();

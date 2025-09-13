@@ -1,10 +1,14 @@
 import { seedLessons } from './lessons.seed';
 import { seedPlatformData } from './platform.seed';
+import { seedModules } from './modules.seed';
 
 async function runAllSeeds() {
   console.log('🌱 Starting database seeding...');
   
   try {
+    // Run modules seeding first (lessons might depend on modules)
+    await seedModules();
+    
     // Run lessons seeding
     await seedLessons();
     

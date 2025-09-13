@@ -3,6 +3,7 @@ export {
   lessons,
   quizzes,
   userProgress,
+  userModuleProgress,
   userStats,
   notifications,
   modules,
@@ -21,5 +22,6 @@ export {
   languageEnum,
   quizTypeEnum,
   notificationTypeEnum,
-  achievementTypeEnum
+  achievementTypeEnum,
+  moduleStatusEnum
 } from './lessons';
