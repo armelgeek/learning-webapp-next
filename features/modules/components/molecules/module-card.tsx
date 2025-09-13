@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Lock, CheckCircle, PlayCircle, BookOpen, Clock } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Lock, CheckCircle, PlayCircle, BookOpen, Clock, AlertCircle } from 'lucide-react';
 import type { ModuleWithProgress } from '../../config/module.types';
 
 interface ModuleCardProps {
@@ -27,10 +28,10 @@ export function ModuleCard({ module, onStartModule }: ModuleCardProps) {
   };
 
   const getModuleIcon = () => {
-    if (module.completionPercentage === 100) {
+    if (module.status === 'completed') {
       return <CheckCircle className="h-6 w-6 text-green-600" />;
     }
-    if (!module.isUnlocked) {
+    if (module.status === 'locked') {
       return <Lock className="h-6 w-6 text-gray-400" />;
     }
     if (module.completionPercentage > 0) {
@@ -40,10 +41,10 @@ export function ModuleCard({ module, onStartModule }: ModuleCardProps) {
   };
 
   const getStatusText = () => {
-    if (module.completionPercentage === 100) {
+    if (module.status === 'completed') {
       return 'Completed';
     }
-    if (!module.isUnlocked) {
+    if (module.status === 'locked') {
       return 'Locked';
     }
     if (module.completionPercentage > 0) {
@@ -53,11 +54,11 @@ export function ModuleCard({ module, onStartModule }: ModuleCardProps) {
   };
 
   const getButtonText = () => {
-    if (module.completionPercentage === 100) {
+    if (module.status === 'completed') {
       return 'Review Module';
     }
-    if (!module.isUnlocked) {
-      return 'Complete Previous Module';
+    if (module.status === 'locked') {
+      return 'Complete Prerequisites';
     }
     if (module.completionPercentage > 0) {
       return 'Continue Module';
@@ -65,40 +66,62 @@ export function ModuleCard({ module, onStartModule }: ModuleCardProps) {
     return 'Start Module';
   };
 
+  const handleModuleClick = () => {
+    if (module.isUnlocked) {
+      onStartModule(module.id);
+    } else {
+      // Could show a toast or modal with prerequisite info
+      console.log(`Module ${module.title} is locked. Prerequisites needed.`);
+    }
+  };
+
   return (
-    <Card 
-      className={`transition-all duration-200 hover:shadow-lg ${
-        module.isUnlocked ? 'hover:scale-105' : 'opacity-60'
-      } ${
-        module.completionPercentage === 100 
-          ? 'ring-2 ring-green-200 bg-green-50/50' 
-          : module.completionPercentage > 0 
-          ? 'ring-2 ring-blue-200 bg-blue-50/50'
-          : ''
-      }`}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            {getModuleIcon()}
-            <div className="flex-1">
-              <CardTitle className="text-lg">{module.title}</CardTitle>
-              <CardDescription className="mt-1">
-                {module.description}
-              </CardDescription>
+    <TooltipProvider>
+      <Card 
+        className={`transition-all duration-200 hover:shadow-lg ${
+          module.isUnlocked ? 'hover:scale-105' : 'opacity-60'
+        } ${
+          module.status === 'completed'
+            ? 'ring-2 ring-green-200 bg-green-50/50' 
+            : module.completionPercentage > 0 
+            ? 'ring-2 ring-blue-200 bg-blue-50/50'
+            : ''
+        }`}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {getModuleIcon()}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getStatusText()}</p>
+                  {module.status === 'locked' && module.prerequisites && module.prerequisites.length > 0 && (
+                    <p className="text-xs mt-1">
+                      Complete prerequisite modules first
+                    </p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex-1">
+                <CardTitle className="text-lg">{module.title}</CardTitle>
+                <CardDescription className="mt-1">
+                  {module.description}
+                </CardDescription>
+              </div>
             </div>
+            {module.imageUrl && (
+              <div className="ml-4 w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                <img 
+                  src={module.imageUrl} 
+                  alt={module.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
-          {module.imageUrl && (
-            <div className="ml-4 w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-              <img 
-                src={module.imageUrl} 
-                alt={module.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-        </div>
-      </CardHeader>
+        </CardHeader>
       
       <CardContent className="space-y-4">
         {/* Module Stats */}
@@ -141,16 +164,34 @@ export function ModuleCard({ module, onStartModule }: ModuleCardProps) {
           </div>
         </div>
 
+        {/* Prerequisites Info */}
+        {module.status === 'locked' && module.prerequisites && module.prerequisites.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-orange-50 dark:bg-orange-950 p-2 rounded">
+            <AlertCircle className="h-3 w-3 text-orange-600" />
+            <span>Complete {module.prerequisites.length} prerequisite module{module.prerequisites.length > 1 ? 's' : ''} first</span>
+          </div>
+        )}
+
         {/* Action Button */}
-        <Button 
-          className="w-full" 
-          variant={module.completionPercentage === 100 ? "outline" : "default"}
-          disabled={!module.isUnlocked}
-          onClick={() => module.isUnlocked && onStartModule(module.id)}
-        >
-          {getButtonText()}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              className="w-full" 
+              variant={module.status === 'completed' ? "outline" : "default"}
+              disabled={!module.isUnlocked}
+              onClick={handleModuleClick}
+            >
+              {getButtonText()}
+            </Button>
+          </TooltipTrigger>
+          {module.status === 'locked' && (
+            <TooltipContent>
+              <p>Complete the prerequisite modules to unlock this content</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 }

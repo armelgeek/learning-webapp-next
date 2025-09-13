@@ -1,13 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, BookOpen, Map } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/auth-client';
+
+interface Lesson {
+  id: string;
+  title: string;
+  type: string;
+  difficultyLevel: string;
+  language: string;
+  [key: string]: unknown;
+}
+
+interface UserProgress {
+  lessonId: string;
+  completed: boolean;
+  score: number;
+  [key: string]: unknown;
+}
 import { useUserLanguagePreferences } from '@/features/language/hooks/use-language-preferences';
 import { LANGUAGES, type LanguageKey } from '@/features/language/config/language.schema';
 import { ModuleProgressionView } from '@/features/modules/components/organisms/module-progression-view';
@@ -151,8 +166,8 @@ function LegacyLessonsView({
 }) {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [lessons, setLessons] = useState<any[]>([]);
-  const [userProgress, setUserProgress] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
 

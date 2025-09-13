@@ -3,15 +3,17 @@ import {
   modules, 
   moduleLessons, 
   lessons, 
-  userProgress 
+  userProgress,
+  userModuleProgress
 } from '@/drizzle/schema';
-import { eq, and, desc, asc, sql, count } from 'drizzle-orm';
+import { eq, and, desc, asc, sql, count, inArray } from 'drizzle-orm';
 import type { 
   Module, 
   ModuleWithProgress, 
   ModuleProgress,
   Language,
-  DifficultyLevel 
+  DifficultyLevel,
+  ModuleStatus
 } from '../config/module.types';
 
 export class ModuleService {
@@ -35,6 +37,7 @@ export class ModuleService {
           isActive: modules.isActive,
           order: modules.order,
           estimatedDuration: modules.estimatedDuration,
+          prerequisites: modules.prerequisites,
           createdAt: modules.createdAt,
           updatedAt: modules.updatedAt,
         })
@@ -98,21 +101,56 @@ export class ModuleService {
         const totalLessons = lessonsInModule.length;
         const completionPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
         
-        // Determine if module is unlocked
+        // Get module status for user
+        let status: ModuleStatus = 'locked';
         let isUnlocked = false;
-        if (modulesWithProgress.length === 0) {
-          // First module is always unlocked
-          isUnlocked = true;
+        
+        if (userId) {
+          const moduleProgress = await db
+            .select({ status: userModuleProgress.status })
+            .from(userModuleProgress)
+            .where(
+              and(
+                eq(userModuleProgress.userId, userId),
+                eq(userModuleProgress.moduleId, module.id)
+              )
+            )
+            .limit(1);
+
+          status = moduleProgress[0]?.status ?? 'locked';
+          
+          // If no explicit status, determine based on prerequisites
+          if (!moduleProgress[0]) {
+            const prerequisitesMet = await this.checkPrerequisites(module.id, userId);
+            if (prerequisitesMet) {
+              status = 'unlocked';
+              // Auto-unlock the module
+              await this.unlockModule(module.id, userId);
+            }
+          }
+          
+          isUnlocked = status === 'unlocked' || status === 'completed';
+          
+          // Update status to completed if all lessons are done
+          if (status === 'unlocked' && completionPercentage === 100) {
+            status = 'completed';
+            await this.completeModule(module.id, userId);
+          }
         } else {
-          // Module is unlocked if previous module is completed
-          const previousModule = modulesWithProgress[modulesWithProgress.length - 1];
-          isUnlocked = previousModule.completionPercentage === 100;
+          // For guest users, use sequential unlocking
+          if (modulesWithProgress.length === 0) {
+            // First module is always unlocked
+            status = 'unlocked';
+            isUnlocked = true;
+          }
         }
 
         modulesWithProgress.push({
           ...module,
+          prerequisites: module.prerequisites as string[] ?? [],
           totalLessons,
           completedLessons,
+          status,
           isUnlocked,
           completionPercentage,
           lessons: lessonsWithProgress,
@@ -134,6 +172,20 @@ export class ModuleService {
     userId: string
   ): Promise<ModuleProgress> {
     try {
+      // Get module details
+      const module = await db
+        .select({
+          id: modules.id,
+          prerequisites: modules.prerequisites,
+        })
+        .from(modules)
+        .where(eq(modules.id, moduleId))
+        .limit(1);
+
+      if (!module[0]) {
+        throw new Error('Module not found');
+      }
+
       // Get total lessons in module
       const lessonsInModule = await db
         .select({ lessonId: moduleLessons.lessonId })
@@ -148,7 +200,10 @@ export class ModuleService {
           totalLessons: 0,
           completedLessons: 0,
           completionPercentage: 0,
+          status: 'locked',
           isCompleted: false,
+          prerequisites: module[0].prerequisites as string[] ?? [],
+          prerequisitesMet: false,
         };
       }
 
@@ -169,12 +224,41 @@ export class ModuleService {
       const completionPercentage = Math.round((completedLessons / totalLessons) * 100);
       const isCompleted = completionPercentage === 100;
 
+      // Get module status
+      const moduleStatusResult = await db
+        .select({ status: userModuleProgress.status })
+        .from(userModuleProgress)
+        .where(
+          and(
+            eq(userModuleProgress.userId, userId),
+            eq(userModuleProgress.moduleId, moduleId)
+          )
+        )
+        .limit(1);
+
+      let status: ModuleStatus = moduleStatusResult[0]?.status ?? 'locked';
+
+      // Check if prerequisites are met
+      const prerequisitesMet = await this.checkPrerequisites(moduleId, userId);
+
+      // Auto-update status if needed
+      if (status === 'locked' && prerequisitesMet) {
+        status = 'unlocked';
+        await this.unlockModule(moduleId, userId);
+      } else if (status === 'unlocked' && isCompleted) {
+        status = 'completed';
+        await this.completeModule(moduleId, userId);
+      }
+
       return {
         moduleId,
         totalLessons,
         completedLessons,
         completionPercentage,
+        status,
         isCompleted,
+        prerequisites: module[0].prerequisites as string[] ?? [],
+        prerequisitesMet,
       };
     } catch (error) {
       console.error('Error fetching module progress:', error);
@@ -183,59 +267,146 @@ export class ModuleService {
   }
 
   /**
-   * Check if a module is unlocked for a user
+   * Check if a module's prerequisites are met
    */
-  static async isModuleUnlocked(
-    moduleId: string, 
-    userId: string, 
-    language: Language
+  static async checkPrerequisites(
+    moduleId: string,
+    userId: string
   ): Promise<boolean> {
     try {
-      // Get the order of the target module
-      const targetModule = await db
-        .select({ order: modules.order })
+      // Get module prerequisites
+      const module = await db
+        .select({ prerequisites: modules.prerequisites })
         .from(modules)
         .where(eq(modules.id, moduleId))
         .limit(1);
 
-      if (!targetModule[0]) {
-        return false;
+      if (!module[0] || !module[0].prerequisites) {
+        return true; // No prerequisites means always unlocked
       }
 
-      const targetOrder = targetModule[0].order;
-
-      // If it's the first module (order 0 or 1), it's always unlocked
-      if (targetOrder <= 1) {
-        return true;
+      const prerequisites = module[0].prerequisites as string[];
+      
+      if (prerequisites.length === 0) {
+        return true; // Empty prerequisites array means always unlocked
       }
 
-      // Get the previous module (one order less)
-      const previousModule = await db
-        .select({ id: modules.id })
-        .from(modules)
+      // Check if all prerequisite modules are completed
+      const completedPrerequisites = await db
+        .select({ moduleId: userModuleProgress.moduleId })
+        .from(userModuleProgress)
         .where(
           and(
-            eq(modules.language, language),
-            eq(modules.order, targetOrder - 1),
-            eq(modules.isActive, true)
+            eq(userModuleProgress.userId, userId),
+            inArray(userModuleProgress.moduleId, prerequisites),
+            eq(userModuleProgress.status, 'completed')
           )
-        )
-        .limit(1);
+        );
 
-      if (!previousModule[0]) {
-        return true; // If no previous module, unlock this one
-      }
-
-      // Check if previous module is completed
-      const previousModuleProgress = await this.getModuleProgress(
-        previousModule[0].id, 
-        userId
-      );
-
-      return previousModuleProgress.isCompleted;
+      return completedPrerequisites.length === prerequisites.length;
     } catch (error) {
-      console.error('Error checking module unlock status:', error);
+      console.error('Error checking prerequisites:', error);
       return false;
     }
   }
+
+  /**
+   * Unlock a module for a user
+   */
+  static async unlockModule(moduleId: string, userId: string): Promise<void> {
+    try {
+      await db
+        .insert(userModuleProgress)
+        .values({
+          userId,
+          moduleId,
+          status: 'unlocked',
+          unlockedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: [userModuleProgress.userId, userModuleProgress.moduleId],
+          set: {
+            status: 'unlocked',
+            unlockedAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+    } catch (error) {
+      console.error('Error unlocking module:', error);
+      throw new Error('Failed to unlock module');
+    }
+  }
+
+  /**
+   * Mark a module as completed for a user
+   */
+  static async completeModule(moduleId: string, userId: string): Promise<void> {
+    try {
+      await db
+        .insert(userModuleProgress)
+        .values({
+          userId,
+          moduleId,
+          status: 'completed',
+          completedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: [userModuleProgress.userId, userModuleProgress.moduleId],
+          set: {
+            status: 'completed',
+            completedAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+
+      // Check and unlock dependent modules
+      await this.unlockDependentModules(moduleId, userId);
+    } catch (error) {
+      console.error('Error completing module:', error);
+      throw new Error('Failed to complete module');
+    }
+  }
+
+  /**
+   * Unlock modules that depend on the completed module
+   */
+  static async unlockDependentModules(completedModuleId: string, userId: string): Promise<void> {
+    try {
+      // Find modules that have the completed module as a prerequisite
+      const dependentModules = await db
+        .select({ id: modules.id, prerequisites: modules.prerequisites })
+        .from(modules)
+        .where(eq(modules.isActive, true));
+
+      for (const module of dependentModules) {
+        const prerequisites = module.prerequisites as string[] ?? [];
+        
+        if (prerequisites.includes(completedModuleId)) {
+          // Check if all prerequisites are now met
+          const prerequisitesMet = await this.checkPrerequisites(module.id, userId);
+          
+          if (prerequisitesMet) {
+            // Check if module is still locked
+            const currentStatus = await db
+              .select({ status: userModuleProgress.status })
+              .from(userModuleProgress)
+              .where(
+                and(
+                  eq(userModuleProgress.userId, userId),
+                  eq(userModuleProgress.moduleId, module.id)
+                )
+              )
+              .limit(1);
+
+            if (!currentStatus[0] || currentStatus[0].status === 'locked') {
+              await this.unlockModule(module.id, userId);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error unlocking dependent modules:', error);
+    }
+  }
+
 }
