@@ -1,6 +1,6 @@
 import { db } from '@/drizzle/db';
-import { quizzes } from '@/drizzle/schema';
-import { and, eq } from 'drizzle-orm';
+import { quizzes, lessons } from '@/drizzle/schema';
+import { and, eq, sql } from 'drizzle-orm';
 import { CreateQuizPayload, UpdateQuizPayload, QuizFilter } from '../config/quiz.types';
 
 export class QuizService {
@@ -81,4 +81,44 @@ export class QuizService {
       correctAnswer: quiz.correctAnswer,
     };
   }
-}
+
+  // Admin-specific methods
+  static async getQuizzesForAdmin(filter?: QuizFilter) {
+    const conditions = [];
+    
+    if (filter?.lessonId) {
+      conditions.push(eq(quizzes.lessonId, filter.lessonId));
+    }
+    if (filter?.type) {
+      conditions.push(eq(quizzes.type, filter.type));
+    }
+
+    const result = await db
+      .select({
+        id: quizzes.id,
+        lessonId: quizzes.lessonId,
+        question: quizzes.question,
+        options: quizzes.options,
+        correctAnswer: quizzes.correctAnswer,
+        type: quizzes.type,
+        explanation: quizzes.explanation,
+        createdAt: quizzes.createdAt,
+        updatedAt: quizzes.updatedAt,
+        // Join with lesson information
+        lessonTitle: sql<string | null>`
+          (SELECT l.title 
+           FROM ${lessons} l 
+           WHERE l.id = ${quizzes.lessonId})
+        `,
+      })
+      .from(quizzes)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(quizzes.createdAt);
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return result.map(quiz => ({
+      ...quiz,
+      createdAt: quiz.createdAt?.toISOString() || null,
+      updatedAt: quiz.updatedAt?.toISOString() || null,
+    }));
+  }

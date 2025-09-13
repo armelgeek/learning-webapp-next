@@ -13,7 +13,10 @@ import type {
   ModuleProgress,
   Language,
   DifficultyLevel,
-  ModuleStatus
+  ModuleStatus,
+  CreateModulePayload,
+  UpdateModulePayload,
+  ModuleFilter
 } from '../config/module.types';
 
 export class ModuleService {
@@ -409,4 +412,85 @@ export class ModuleService {
     }
   }
 
-}
+  // Admin-specific methods
+  static async getModulesForAdmin(filter?: ModuleFilter) {
+    const conditions = [];
+    
+    if (filter?.language) {
+      conditions.push(eq(modules.language, filter.language));
+    }
+    if (filter?.difficultyLevel) {
+      conditions.push(eq(modules.difficultyLevel, filter.difficultyLevel));
+    }
+    if (filter?.isActive !== undefined) {
+      conditions.push(eq(modules.isActive, filter.isActive));
+    }
+
+    const result = await db
+      .select({
+        id: modules.id,
+        title: modules.title,
+        description: modules.description,
+        language: modules.language,
+        difficultyLevel: modules.difficultyLevel,
+        imageUrl: modules.imageUrl,
+        isActive: modules.isActive,
+        order: modules.order,
+        estimatedDuration: modules.estimatedDuration,
+        prerequisites: modules.prerequisites,
+        createdAt: modules.createdAt,
+        updatedAt: modules.updatedAt,
+        // Count lessons in this module
+        lessonsCount: sql<number>`
+          (SELECT COUNT(*) 
+           FROM ${moduleLessons} ml 
+           WHERE ml.module_id = ${modules.id})
+        `,
+      })
+      .from(modules)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(modules.order, modules.createdAt);
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return result.map(module => ({
+      ...module,
+      lessonsCount: Number(module.lessonsCount),
+      createdAt: module.createdAt?.toISOString() || null,
+      updatedAt: module.updatedAt?.toISOString() || null,
+    }));
+  }
+
+  static async createModule(data: CreateModulePayload) {
+    const result = await db
+      .insert(modules)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return result[0];
+  }
+
+  static async updateModule(id: string, data: Partial<UpdateModulePayload>) {
+    const result = await db
+      .update(modules)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(modules.id, id))
+      .returning();
+
+    return result[0] || null;
+  }
+
+  static async deleteModule(id: string) {
+    const result = await db
+      .delete(modules)
+      .where(eq(modules.id, id))
+      .returning();
+
+    return result[0] || null;
+  }
