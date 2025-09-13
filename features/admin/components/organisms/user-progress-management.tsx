@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,96 +13,45 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
+import { useAdminUserProgress, useResetUserProgress } from '../../hooks/use-user-progress';
+import { toast } from 'sonner';
 
-// Mock data for demo
-const mockUserProgress = [
-  {
-    id: '1',
-    userId: 'user-1',
-    userName: 'John Doe',
-    userEmail: 'john@example.com',
-    userAvatar: '',
-    lessonId: 'lesson-1',
-    lessonTitle: 'Spanish Greetings',
-    moduleTitle: 'Spanish Basics',
-    language: 'spanish',
-    completed: true,
-    score: 95,
-    attempts: 2,
-    completedAt: '2024-01-20T15:30:00Z',
-    createdAt: '2024-01-20T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z',
-  },
-  {
-    id: '2',
-    userId: 'user-2',
-    userName: 'Jane Smith',
-    userEmail: 'jane@example.com',
-    userAvatar: '',
-    lessonId: 'lesson-2',
-    lessonTitle: 'French Numbers',
-    moduleTitle: 'French Basics',
-    language: 'french',
-    completed: false,
-    score: 0,
-    attempts: 1,
-    completedAt: null,
-    createdAt: '2024-01-19T14:00:00Z',
-    updatedAt: '2024-01-19T14:15:00Z',
-  },
-  {
-    id: '3',
-    userId: 'user-1',
-    userName: 'John Doe',
-    userEmail: 'john@example.com',
-    userAvatar: '',
-    lessonId: 'lesson-3',
-    lessonTitle: 'Spanish Colors',
-    moduleTitle: 'Spanish Basics',
-    language: 'spanish',
-    completed: true,
-    score: 87,
-    attempts: 1,
-    completedAt: '2024-01-21T09:15:00Z',
-    createdAt: '2024-01-21T09:00:00Z',
-    updatedAt: '2024-01-21T09:15:00Z',
-  },
-  {
-    id: '4',
-    userId: 'user-3',
-    userName: 'Bob Wilson',
-    userEmail: 'bob@example.com',
-    userAvatar: '',
-    lessonId: 'lesson-4',
-    lessonTitle: 'German Articles',
-    moduleTitle: 'German Grammar',
-    language: 'german',
-    completed: false,
-    score: 0,
-    attempts: 3,
-    completedAt: null,
-    createdAt: '2024-01-18T16:00:00Z',
-    updatedAt: '2024-01-20T11:30:00Z',
-  },
-];
-
-type UserProgress = typeof mockUserProgress[0];
+type UserProgress = {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userAvatar: string;
+  lessonId: string;
+  lessonTitle: string;
+  moduleTitle: string;
+  language: string;
+  completed: boolean;
+  score: number;
+  attempts: number;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export function UserProgressManagement() {
-  const [progress, setProgress] = useState<UserProgress[]>(mockUserProgress);
+  const { data: progress = [], isLoading, error } = useAdminUserProgress();
+  const resetProgress = useResetUserProgress();
 
   const handleViewDetails = (progressId: string) => {
     console.log('View progress details:', progressId);
     // In real app, navigate to detailed progress view
   };
 
-  const handleResetProgress = (progressId: string) => {
+  const handleResetProgress = async (progressId: string) => {
     if (confirm('Are you sure you want to reset this user\'s progress for this lesson?')) {
-      setProgress(progress.map(p => 
-        p.id === progressId 
-          ? { ...p, completed: false, score: 0, attempts: 0, completedAt: null }
-          : p
-      ));
+      try {
+        await resetProgress.mutateAsync(progressId);
+        toast.success('User progress reset successfully');
+      } catch (error) {
+        toast.error('Failed to reset user progress');
+        console.error('Error resetting progress:', error);
+      }
     }
   };
 
@@ -244,6 +192,17 @@ export function UserProgressManagement() {
     },
   ];
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load user progress</p>
+          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AdminDataTable
       title="User Learning Progress"
@@ -251,6 +210,7 @@ export function UserProgressManagement() {
       data={progress}
       columns={columns}
       searchColumn="userName"
+      isLoading={isLoading}
     />
   );
 }

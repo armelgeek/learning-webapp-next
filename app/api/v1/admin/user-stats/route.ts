@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getAdminUserStatsUseCase } from '@/features/admin/domain/use-cases/get-admin-user-progress.use-case';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Use the business logic layer to get user stats for admin
     const result = await getAdminUserStatsUseCase();

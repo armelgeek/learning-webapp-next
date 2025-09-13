@@ -420,3 +420,4 @@ export class ProgressService {
 
     return result[0] || null;
   }
+}

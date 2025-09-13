@@ -494,3 +494,4 @@ export class ModuleService {
 
     return result[0] || null;
   }
+}

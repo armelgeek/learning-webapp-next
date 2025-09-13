@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (type && type !== 'all') {
-      filter.type = type as any;
+      filter.type = type as 'multiple_choice' | 'flashcard' | 'fill_blanks' | 'translation' | 'dictation' | 'pronunciation';
     }
 
     // Use the business logic layer to get quizzes for admin

@@ -238,3 +238,4 @@ export class LessonService {
       updatedAt: lesson.updatedAt?.toISOString() || null,
     }));
   }
+}

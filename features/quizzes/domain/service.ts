@@ -122,3 +122,4 @@ export class QuizService {
       updatedAt: quiz.updatedAt?.toISOString() || null,
     }));
   }
+}

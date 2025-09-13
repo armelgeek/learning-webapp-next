@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   getForumCategoriesUseCase, 
-  createForumCategoryUseCase, 
-  updateForumCategoryUseCase, 
-  deleteForumCategoryUseCase 
+  createForumCategoryUseCase
 } from '@/features/admin/domain/use-cases/forum-categories.use-case';
 import { ForumCategoryFilter } from '@/features/admin/domain/forum-categories.service';
 
