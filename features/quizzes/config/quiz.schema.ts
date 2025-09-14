@@ -25,3 +25,8 @@ export const quizFilterSchema = z.object({
   lessonId: z.string().optional(),
   type: z.enum(['multiple_choice', 'flashcard']).optional(),
 });
+
+export type CreateQuizInput = z.infer<typeof createQuizSchema>;
+export type UpdateQuizInput = z.infer<typeof updateQuizSchema>;
+export type QuizAnswerInput = z.infer<typeof quizAnswerSchema>;
+export type QuizFilterInput = z.infer<typeof quizFilterSchema>;

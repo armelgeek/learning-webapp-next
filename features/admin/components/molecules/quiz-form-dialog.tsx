@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { createQuizSchema, CreateQuizInput } from '../../config/admin.schema';
+import { useLessons } from '@/features/lessons/hooks/use-lessons';
 
 const quizTypes = [
   { value: 'multiple_choice', label: 'Multiple Choice' },
@@ -39,15 +40,6 @@ const quizTypes = [
   { value: 'translation', label: 'Translation' },
   { value: 'dictation', label: 'Dictation' },
   { value: 'pronunciation', label: 'Pronunciation' },
-];
-
-// Mock lessons for the dropdown - in real app, fetch from API
-const mockLessons = [
-  { id: 'lesson-1', title: 'Spanish Greetings' },
-  { id: 'lesson-2', title: 'French Numbers' },
-  { id: 'lesson-3', title: 'German Articles' },
-  { id: 'lesson-4', title: 'Italian Food' },
-  { id: 'lesson-5', title: 'Portuguese Basics' },
 ];
 
 interface QuizFormDialogProps {
@@ -63,6 +55,10 @@ export function QuizFormDialog({
   quiz,
   onSave,
 }: QuizFormDialogProps) {
+  // Fetch lessons from API instead of using mock data
+  const { data: lessonsData, isLoading: lessonsLoading, error: lessonsError } = useLessons();
+  const lessons = lessonsData?.data || [];
+
   const form = useForm<CreateQuizInput>({
     resolver: zodResolver(createQuizSchema),
     defaultValues: {
@@ -116,11 +112,19 @@ export function QuizFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {mockLessons.map((lesson) => (
-                          <SelectItem key={lesson.id} value={lesson.id}>
-                            {lesson.title}
-                          </SelectItem>
-                        ))}
+                        {lessonsLoading ? (
+                          <SelectItem value="" disabled>Loading lessons...</SelectItem>
+                        ) : lessonsError ? (
+                          <SelectItem value="" disabled>Error loading lessons</SelectItem>
+                        ) : lessons.length === 0 ? (
+                          <SelectItem value="" disabled>No lessons available</SelectItem>
+                        ) : (
+                          lessons.map((lesson: any) => (
+                            <SelectItem key={lesson.id} value={lesson.id}>
+                              {lesson.title}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

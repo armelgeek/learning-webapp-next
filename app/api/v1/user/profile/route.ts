@@ -4,6 +4,7 @@ import { db } from '@/drizzle/db';
 import { users } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { ProgressService } from '@/features/progress/domain/service';
+import { updateProfileSchema } from '@/features/profile/config/profile.schema';
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,6 +72,58 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching user profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    // Validate request body
+    const validationResult = updateProfileSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid profile data', details: validationResult.error.format() },
+        { status: 400 }
+      );
+    }
+
+    const data = validationResult.data;
+
+    // Update user profile
+    const updatedUser = await db
+      .update(users)
+      .set({
+        ...data,
+        targetLanguages: JSON.stringify(data.targetLanguages),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, session.user.id))
+      .returning();
+
+    if (!updatedUser[0]) {
+      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: updatedUser[0],
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

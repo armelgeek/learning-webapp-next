@@ -13,69 +13,32 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
-
-// Mock data for demo
-const mockChallenges = [
-  {
-    id: '1',
-    date: '2024-01-22T00:00:00Z',
-    title: 'Complete 3 Lessons',
-    description: 'Finish at least 3 lessons in any language today',
-    targetValue: 3,
-    pointsReward: 25,
-    language: null,
-    difficultyLevel: null,
-    isActive: true,
-    participantsCount: 45,
-    completedCount: 23,
-    createdAt: '2024-01-21T08:00:00Z',
-  },
-  {
-    id: '2',
-    date: '2024-01-21T00:00:00Z',
-    title: 'Spanish Vocabulary Sprint',
-    description: 'Learn 10 new Spanish words',
-    targetValue: 10,
-    pointsReward: 30,
-    language: 'spanish',
-    difficultyLevel: 'beginner',
-    isActive: false,
-    participantsCount: 32,
-    completedCount: 28,
-    createdAt: '2024-01-20T08:00:00Z',
-  },
-  {
-    id: '3',
-    date: '2024-01-23T00:00:00Z',
-    title: 'Perfect Score Challenge',
-    description: 'Get 100% on any quiz',
-    targetValue: 1,
-    pointsReward: 40,
-    language: null,
-    difficultyLevel: 'intermediate',
-    isActive: true,
-    participantsCount: 18,
-    completedCount: 7,
-    createdAt: '2024-01-21T10:00:00Z',
-  },
-];
-
-type DailyChallenge = typeof mockChallenges[0];
+import { useDailyChallenges, useDeleteDailyChallenge } from '../../hooks/use-daily-challenges';
+import { toast } from 'sonner';
 
 export function DailyChallengesManagement() {
-  const [challenges, setChallenges] = useState<DailyChallenge[]>(mockChallenges);
+  // Replace mock data with real API calls
+  const { data: challengesData, isLoading, error } = useDailyChallenges();
+  const deleteChallengeMutation = useDeleteDailyChallenge();
+  
+  const challenges = challengesData?.data || [];
 
-  const handleEdit = (challenge: DailyChallenge) => {
+  const handleEdit = (challenge: any) => {
     console.log('Edit challenge:', challenge.id);
   };
 
-  const handleDelete = (challengeId: string) => {
+  const handleDelete = async (challengeId: string) => {
     if (confirm('Are you sure you want to delete this challenge?')) {
-      setChallenges(challenges.filter(c => c.id !== challengeId));
+      try {
+        await deleteChallengeMutation.mutateAsync(challengeId);
+        toast.success('Challenge deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete challenge');
+      }
     }
   };
 
-  const columns: ColumnDef<DailyChallenge>[] = [
+  const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'title',
       header: 'Challenge',
