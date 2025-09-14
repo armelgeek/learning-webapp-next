@@ -13,6 +13,17 @@ import {
 import { eq, desc, and, sql, count, gte, lt } from 'drizzle-orm';
 import type { LanguageKey } from '@/features/language/config/language.schema';
 
+// Helper function to safely convert dates to ISO strings
+const safeToISOString = (value: any): string | null => {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return null;
+};
+
 export class DashboardService {
   static async getUserDashboardData(userId: string, targetLanguage: LanguageKey) {
     try {
@@ -129,7 +140,7 @@ export class DashboardService {
       // Convert Date objects to ISO strings for JSON serialization
       const serializedForumTopics = recentForumTopics.map(topic => ({
         ...topic,
-        createdAt: topic.createdAt?.toISOString() || null,
+        createdAt: safeToISOString(topic.createdAt),
       }));
 
       // Calculate completion percentage
