@@ -13,11 +13,12 @@ export async function GET(
       language: searchParams.get('language'),
       type: searchParams.get('type'),
       difficultyLevel: searchParams.get('difficultyLevel'),
+      isActive: searchParams.get('isActive') === 'true' ? true : searchParams.get('isActive') === 'false' ? false : undefined,
     };
 
     // Remove null values and validate with schema
     const cleanFilter = Object.fromEntries(
-      Object.entries(rawFilter).filter(([, value]) => value !== null)
+      Object.entries(rawFilter).filter(([, value]) => value !== null && value !== undefined)
     );
 
     // Validate the filter using the schema
