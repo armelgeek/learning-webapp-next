@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, MoreHorizontal, BookOpen, Link } from 'lucide-react';
+import { Eye, Edit, Trash2, MoreHorizontal, BookOpen, Link, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +15,10 @@ import {
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { ModuleFormDialog } from '../molecules/module-form-dialog';
 import { LessonAssignmentDialog } from '../molecules/lesson-assignment-dialog';
+import { LessonFormDialog } from '../molecules/lesson-form-dialog';
 import { ModulePrerequisiteDialog } from '../molecules/module-prerequisite-dialog';
 import { useAdminModules, useDeleteModule, useCreateModule, useUpdateModule } from '../../hooks/use-admin-modules';
+import { useCreateLesson } from '../../hooks/use-admin-lessons';
 import { toast } from 'sonner';
 
 type Module = {
@@ -39,10 +41,12 @@ export function ModulesManagement() {
   const deleteModule = useDeleteModule();
   const createModule = useCreateModule();
   const updateModule = useUpdateModule();
+  const createLesson = useCreateLesson();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [lessonAssignmentOpen, setLessonAssignmentOpen] = useState(false);
   const [prerequisiteDialogOpen, setPrerequisiteDialogOpen] = useState(false);
+  const [lessonFormOpen, setLessonFormOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
   const handleAdd = () => {
@@ -63,6 +67,22 @@ export function ModulesManagement() {
   const handleManagePrerequisites = (module: Module) => {
     setSelectedModule(module);
     setPrerequisiteDialogOpen(true);
+  };
+
+  const handleAddLesson = (module: Module) => {
+    setSelectedModule(module);
+    setLessonFormOpen(true);
+  };
+
+  const handleCreateLesson = async (lessonData: any) => {
+    try {
+      await createLesson.mutateAsync(lessonData);
+      setLessonFormOpen(false);
+      toast.success('Lesson created successfully');
+    } catch (error) {
+      toast.error('Failed to create lesson');
+      console.error('Error creating lesson:', error);
+    }
   };
 
   const handleDelete = async (moduleId: string) => {
@@ -169,39 +189,50 @@ export function ModulesManagement() {
       cell: ({ row }) => {
         const module = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => console.log('View module:', module.id)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleManageLessons(module)}>
-                <BookOpen className="mr-2 h-4 w-4" />
-                Manage Lessons
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleManagePrerequisites(module)}>
-                <Link className="mr-2 h-4 w-4" />
-                Prerequisites
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEdit(module)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleDelete(module.id)}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleAddLesson(module)}
+              className="h-8 px-2 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add Lesson
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => console.log('View module:', module.id)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleManageLessons(module)}>
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Manage Lessons
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleManagePrerequisites(module)}>
+                  <Link className="mr-2 h-4 w-4" />
+                  Prerequisites
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleEdit(module)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => handleDelete(module.id)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         );
       },
     },
@@ -251,6 +282,14 @@ export function ModulesManagement() {
             moduleName={selectedModule.title}
             open={prerequisiteDialogOpen}
             onOpenChange={setPrerequisiteDialogOpen}
+          />
+
+          <LessonFormDialog
+            open={lessonFormOpen}
+            onOpenChange={setLessonFormOpen}
+            lesson={null}
+            onSave={handleCreateLesson}
+            defaultModuleId={selectedModule.id}
           />
         </>
       )}
