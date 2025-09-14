@@ -77,8 +77,12 @@ export class LessonService {
         tags: lessons.tags,
         createdAt: lessons.createdAt,
         updatedAt: lessons.updatedAt,
+        moduleId: moduleLessons.moduleId, // Include module ID if lesson is in a module
+        moduleTitle: modules.title, // Include module title for display
       })
       .from(lessons)
+      .leftJoin(moduleLessons, eq(moduleLessons.lessonId, lessons.id))
+      .leftJoin(modules, eq(modules.id, moduleLessons.moduleId))
       .where(eq(lessons.id, id))
       .limit(1);
 
@@ -93,6 +97,7 @@ export class LessonService {
       tags: lesson.tags ? JSON.parse(lesson.tags) : [],
       createdAt: lesson.createdAt?.toISOString() || null,
       updatedAt: lesson.updatedAt?.toISOString() || null,
+      moduleId: lesson.moduleId || undefined, // Make it undefined if null for better form handling
     };
   }
 
@@ -129,18 +134,55 @@ export class LessonService {
       }
     }
 
+    // Validate module exists if provided
+    if (data.moduleId) {
+      const moduleExists = await db
+        .select({ id: modules.id })
+        .from(modules)
+        .where(eq(modules.id, data.moduleId))
+        .limit(1);
+      
+      if (moduleExists.length === 0) {
+        throw new Error('Module does not exist');
+      }
+    }
+
+    // Extract moduleId from data before inserting lesson (since it's not a lesson field)
+    const { moduleId, ...lessonData } = data;
+
     const result = await db
       .insert(lessons)
       .values({
-        ...data,
-        prerequisites: data.prerequisites ? JSON.stringify(data.prerequisites) : null,
-        tags: data.tags ? JSON.stringify(data.tags) : null,
+        ...lessonData,
+        prerequisites: lessonData.prerequisites ? JSON.stringify(lessonData.prerequisites) : null,
+        tags: lessonData.tags ? JSON.stringify(lessonData.tags) : null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
       .returning();
 
-    return result[0];
+    const newLesson = result[0];
+
+    // If a moduleId was provided, create the module-lesson relationship
+    if (moduleId) {
+      // Get the current highest order for lessons in this module
+      const moduleOrderQuery = await db
+        .select({ maxOrder: sql<number>`COALESCE(MAX(${moduleLessons.order}), -1)` })
+        .from(moduleLessons)
+        .where(eq(moduleLessons.moduleId, moduleId));
+      
+      const nextOrder = (moduleOrderQuery[0]?.maxOrder || -1) + 1;
+
+      await db
+        .insert(moduleLessons)
+        .values({
+          moduleId,
+          lessonId: newLesson.id,
+          order: nextOrder,
+        });
+    }
+
+    return newLesson;
   }
 
   static async updateLesson(id: string, data: Partial<UpdateLessonPayload>) {
@@ -393,6 +435,23 @@ export class LessonService {
       .from(lessons)
       .where(and(...conditions))
       .orderBy(lessons.order, lessons.title);
+
+    return result;
+  }
+
+  static async getAvailableModules() {
+    const result = await db
+      .select({
+        id: modules.id,
+        title: modules.title,
+        description: modules.description,
+        language: modules.language,
+        difficultyLevel: modules.difficultyLevel,
+        order: modules.order,
+      })
+      .from(modules)
+      .where(eq(modules.isActive, true))
+      .orderBy(modules.order, modules.title);
 
     return result;
   }

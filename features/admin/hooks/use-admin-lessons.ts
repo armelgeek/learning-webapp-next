@@ -67,3 +67,27 @@ export function useDeleteLesson() {
     },
   });
 }
+
+// Get available modules for lesson assignment
+export function useAvailableModules() {
+  return useQuery({
+    queryKey: ['available-modules'],
+    queryFn: async () => {
+      const response = await axios.get('/api/lessons/available-modules');
+      return response.data;
+    },
+  });
+}
+
+// Get lesson by ID for editing
+export function useLessonById(id: string | null) {
+  return useQuery({
+    queryKey: ['lesson', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const response = await axios.get(`/api/lessons/${id}`);
+      return response.data;
+    },
+    enabled: !!id, // Only run the query if id is provided
+  });
+}
