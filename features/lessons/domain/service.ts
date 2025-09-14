@@ -48,6 +48,7 @@ export class LessonService {
     // Convert Date objects to ISO strings for JSON serialization
     return result.map(lesson => ({
       ...lesson,
+      content: lesson.content as LessonContent,
       prerequisites: lesson.prerequisites ? JSON.parse(lesson.prerequisites) : [],
       tags: lesson.tags ? JSON.parse(lesson.tags) : [],
       createdAt: lesson.createdAt?.toISOString() || null,
@@ -87,6 +88,7 @@ export class LessonService {
     // Convert Date objects to ISO strings for JSON serialization
     return {
       ...lesson,
+      content: lesson.content as LessonContent,
       prerequisites: lesson.prerequisites ? JSON.parse(lesson.prerequisites) : [],
       tags: lesson.tags ? JSON.parse(lesson.tags) : [],
       createdAt: lesson.createdAt?.toISOString() || null,
@@ -372,6 +374,7 @@ export class LessonService {
     // Convert Date objects to ISO strings for JSON serialization
     return result.map(lesson => ({
       ...lesson,
+      content: lesson.content as LessonContent,
       prerequisites: lesson.prerequisites ? JSON.parse(lesson.prerequisites) : [],
       tags: lesson.tags ? JSON.parse(lesson.tags) : [],
       createdAt: lesson.createdAt?.toISOString() || null,
