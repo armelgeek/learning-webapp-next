@@ -6,7 +6,7 @@ const AppFooter = () => {
       <div>
         <hr />
         <p className="py-5 text-sm text-center">
-          Copyright 2024 @bootik.com - All Rights Reserved
+          Copyright 2024 @langua.com - All Rights Reserved
         </p>
       </div>
     </div>

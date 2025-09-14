@@ -113,11 +113,11 @@ export function QuizFormDialog({
                       </FormControl>
                       <SelectContent>
                         {lessonsLoading ? (
-                          <SelectItem value="" disabled>Loading lessons...</SelectItem>
+                          <SelectItem value="all" disabled>Loading lessons...</SelectItem>
                         ) : lessonsError ? (
-                          <SelectItem value="" disabled>Error loading lessons</SelectItem>
+                          <SelectItem value="all" disabled>Error loading lessons</SelectItem>
                         ) : lessons.length === 0 ? (
-                          <SelectItem value="" disabled>No lessons available</SelectItem>
+                          <SelectItem value="all" disabled>No lessons available</SelectItem>
                         ) : (
                           lessons.map((lesson: any) => (
                             <SelectItem key={lesson.id} value={lesson.id}>
