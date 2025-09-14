@@ -70,8 +70,13 @@ export function ModuleCard({ module, onStartModule }: ModuleCardProps) {
     if (module.isUnlocked) {
       onStartModule(module.id);
     } else {
-      // Could show a toast or modal with prerequisite info
-      console.log(`Module ${module.title} is locked. Prerequisites needed.`);
+      // Show informative message for locked modules
+      const prerequisiteCount = module.prerequisites?.length || 0;
+      const message = prerequisiteCount > 0 
+        ? `🔒 Complete ${prerequisiteCount} prerequisite module${prerequisiteCount > 1 ? 's' : ''} before accessing "${module.title}". Keep learning to unlock new content!`
+        : `🔒 Module "${module.title}" is currently locked. Continue your learning journey to unlock it!`;
+      
+      alert(message);
     }
   };
 
@@ -166,9 +171,33 @@ export function ModuleCard({ module, onStartModule }: ModuleCardProps) {
 
         {/* Prerequisites Info */}
         {module.status === 'locked' && module.prerequisites && module.prerequisites.length > 0 && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-orange-50 dark:bg-orange-950 p-2 rounded">
-            <AlertCircle className="h-3 w-3 text-orange-600" />
-            <span>Complete {module.prerequisites.length} prerequisite module{module.prerequisites.length > 1 ? 's' : ''} first</span>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-orange-50 dark:bg-orange-950 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
+              <Lock className="h-3 w-3 text-orange-600 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-orange-800 dark:text-orange-200">
+                  Module Locked
+                </p>
+                <p className="text-orange-700 dark:text-orange-300">
+                  Complete {module.prerequisites.length} prerequisite module{module.prerequisites.length > 1 ? 's' : ''} to unlock this content
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Completion Achievement */}
+        {module.status === 'completed' && (
+          <div className="flex items-center gap-2 text-xs bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
+            <CheckCircle className="h-3 w-3 text-green-600 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-green-800 dark:text-green-200">
+                Module Completed! 
+              </p>
+              <p className="text-green-700 dark:text-green-300">
+                🎉 You've mastered all {module.totalLessons} lessons
+              </p>
+            </div>
           </div>
         )}
 

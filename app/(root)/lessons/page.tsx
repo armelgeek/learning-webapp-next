@@ -1,9 +1,12 @@
 'use client';
 
-import { AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { AlertCircle, BookOpen, Map } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSession } from '@/auth-client';
 
 interface Lesson {
@@ -24,15 +27,31 @@ interface UserProgress {
 import { useUserLanguagePreferences } from '@/features/language/hooks/use-language-preferences';
 import { LANGUAGES, type LanguageKey } from '@/features/language/config/language.schema';
 import { ModuleProgressionView } from '@/features/modules/components/organisms/module-progression-view';
+import { LessonList } from '@/features/lessons/components/organisms/lesson-list';
 
 export default function LessonsPage() {
   const { data: session } = useSession();
   const { preferences, isLoading: preferencesLoading, error: preferencesError } = useUserLanguagePreferences(session?.user?.id);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>('modules');
+
+  // Update selected language when preferences load
+  useEffect(() => {
+    if (preferences?.targetLanguage) {
+      setSelectedLanguage(preferences.targetLanguage);
+    }
+  }, [preferences]);
 
   const handleStartModule = (moduleId: string) => {
     // Navigate to the module's first lesson
     // For now, just show an alert
     alert(`Starting module: ${moduleId}`);
+  };
+
+  const handleStartLesson = (lessonId: string) => {
+    // Navigate to the specific lesson
+    // For now, just show an alert
+    alert(`Starting lesson: ${lessonId}`);
   };
 
   const handleSetLanguagePreference = () => {
