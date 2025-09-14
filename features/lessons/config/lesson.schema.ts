@@ -26,6 +26,7 @@ export const createLessonSchema = z.object({
   order: z.number().default(0),
   prerequisites: z.array(z.string().uuid()).optional(),
   tags: z.array(z.string()).optional(),
+  moduleId: z.string().uuid().optional(), // Add optional module assignment
 });
 
 export const updateLessonSchema = createLessonSchema.partial().extend({

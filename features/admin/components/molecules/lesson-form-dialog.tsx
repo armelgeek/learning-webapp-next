@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -35,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { createLessonSchema } from '@/features/lessons/config/lesson.schema';
 import { CreateLessonPayload } from '@/features/lessons/config/lesson.types';
+import { useAvailableModules, useLessonById } from '@/features/admin/hooks/use-admin-lessons';
 
 const languages = [
   { value: 'spanish', label: 'Spanish' },
@@ -77,33 +78,72 @@ export function LessonFormDialog({
   onSave,
   availableLessons = [],
 }: LessonFormDialogProps) {
-  const [tags, setTags] = useState<string[]>(lesson?.tags || []);
+  const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
+  
+  // Fetch available modules for the dropdown
+  const { data: availableModules = [], isLoading: isLoadingModules } = useAvailableModules();
+  
+  // Fetch complete lesson data if editing (lesson.id provided)
+  const { data: lessonData, isLoading: isLoadingLesson } = useLessonById(lesson?.id || null);
+  
+  // Use fetched lesson data or fallback to passed lesson prop
+  const effectiveLesson = lessonData || lesson;
 
   const form = useForm<CreateLessonPayload>({
     resolver: zodResolver(createLessonSchema),
     defaultValues: {
-      title: lesson?.title || '',
-      description: lesson?.description || '',
-      language: lesson?.language || 'spanish',
-      type: lesson?.type || 'vocabulary',
-      content: lesson?.content || {
+      title: '',
+      description: '',
+      language: 'spanish',
+      type: 'vocabulary',
+      content: {
         text: '',
         examples: [],
         vocabulary: [],
         grammarRules: [],
       },
-      audioUrl: lesson?.audioUrl || '',
-      videoUrl: lesson?.videoUrl || '',
-      imageUrl: lesson?.imageUrl || '',
-      difficultyLevel: lesson?.difficultyLevel || 'beginner',
-      estimatedDuration: lesson?.estimatedDuration || 5,
-      pointsReward: lesson?.pointsReward || 10,
-      order: lesson?.order || 0,
-      prerequisites: lesson?.prerequisites || [],
-      tags: lesson?.tags || [],
+      audioUrl: '',
+      videoUrl: '',
+      imageUrl: '',
+      difficultyLevel: 'beginner',
+      estimatedDuration: 5,
+      pointsReward: 10,
+      order: 0,
+      prerequisites: [],
+      tags: [],
+      moduleId: undefined,
     },
   });
+
+  // Update form when lesson data is available (for editing)
+  useEffect(() => {
+    if (effectiveLesson) {
+      form.reset({
+        title: effectiveLesson.title || '',
+        description: effectiveLesson.description || '',
+        language: effectiveLesson.language || 'spanish',
+        type: effectiveLesson.type || 'vocabulary',
+        content: effectiveLesson.content || {
+          text: '',
+          examples: [],
+          vocabulary: [],
+          grammarRules: [],
+        },
+        audioUrl: effectiveLesson.audioUrl || '',
+        videoUrl: effectiveLesson.videoUrl || '',
+        imageUrl: effectiveLesson.imageUrl || '',
+        difficultyLevel: effectiveLesson.difficultyLevel || 'beginner',
+        estimatedDuration: effectiveLesson.estimatedDuration || 5,
+        pointsReward: effectiveLesson.pointsReward || 10,
+        order: effectiveLesson.order || 0,
+        prerequisites: effectiveLesson.prerequisites || [],
+        tags: effectiveLesson.tags || [],
+        moduleId: effectiveLesson.moduleId || undefined,
+      });
+      setTags(effectiveLesson.tags || []);
+    }
+  }, [effectiveLesson, form]);
 
   const onSubmit = (data: CreateLessonPayload) => {
     const submitData = {
@@ -154,9 +194,18 @@ export function LessonFormDialog({
           </SheetDescription>
         </SheetHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Show loading state when fetching lesson data for editing */}
+        {lesson && isLoadingLesson ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+              <p>Loading lesson data...</p>
+            </div>
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="title"
@@ -259,6 +308,62 @@ export function LessonFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="moduleId"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel className="flex items-center gap-2">
+                      📚 Module Assignment (Optional)
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger className="h-auto">
+                          <SelectValue placeholder={isLoadingModules ? "🔄 Loading modules..." : "Choose a module to organize this lesson"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="" className="py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">🚫</span>
+                            <div>
+                              <div className="font-medium">No Module</div>
+                              <div className="text-sm text-gray-500">Lesson will not be assigned to any module</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        {availableModules.map((module: any) => (
+                          <SelectItem key={module.id} value={module.id} className="py-3">
+                            <div className="flex items-center gap-3 w-full">
+                              <span className="text-xl">🎯</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate">{module.title}</div>
+                                <div className="text-sm text-gray-500 truncate">
+                                  {module.description || 'No description'}
+                                </div>
+                                <div className="flex gap-1 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {module.language}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {module.difficultyLevel}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-sm">
+                      💡 Assigning this lesson to a module helps students follow a structured learning path. 
+                      Lessons in modules are automatically ordered and unlocked progressively.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -434,6 +539,7 @@ export function LessonFormDialog({
             </SheetFooter>
           </form>
         </Form>
+        )}
       </SheetContent>
     </Sheet>
   );
