@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/drizzle/db';
 import { moduleLessons, lessons, modules } from '@/drizzle/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 
 interface RouteContext {
@@ -35,11 +35,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .where(eq(moduleLessons.moduleId, moduleId))
       .orderBy(moduleLessons.order, lessons.order);
 
-    // Get assigned lesson IDs for exclusion
-    const assignedLessonIds = assignedLessons.map(al => al.lesson.id);
-
-    // Get all available lessons not in this module
-    let availableLessonsQuery = db
+    // Get all active lessons
+    const allLessons = await db
       .select({
         id: lessons.id,
         title: lessons.title,
@@ -49,16 +46,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
         estimatedDuration: lessons.estimatedDuration,
       })
       .from(lessons)
-      .where(eq(lessons.isActive, true));
+      .where(eq(lessons.isActive, true))
+      .orderBy(lessons.order, lessons.title);
 
-    // If there are assigned lessons, exclude them
-    if (assignedLessonIds.length > 0) {
-      availableLessonsQuery = availableLessonsQuery.where(
-        sql`${lessons.id} NOT IN (${sql.join(assignedLessonIds.map(id => sql`${id}`), sql`, `)})`
-      );
-    }
-
-    const availableLessons = await availableLessonsQuery.orderBy(lessons.order, lessons.title);
+    // Filter out assigned lessons on the server side
+    const assignedLessonIds = new Set(assignedLessons.map(al => al.lesson.id));
+    const availableLessons = allLessons.filter(lesson => !assignedLessonIds.has(lesson.id));
 
     return NextResponse.json({
       assigned: assignedLessons.map(al => ({
@@ -111,12 +104,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Verify all lessons exist
-    const existingLessons = await db
+    const allExistingLessons = await db
       .select({ id: lessons.id })
-      .from(lessons)
-      .where(sql`${lessons.id} IN (${sql.join(lessonIds.map(id => sql`${id}`), sql`, `)})`);
+      .from(lessons);
+    
+    const existingLessonIds = new Set(allExistingLessons.map(l => l.id));
+    const allLessonsExist = lessonIds.every(id => existingLessonIds.has(id));
 
-    if (existingLessons.length !== lessonIds.length) {
+    if (!allLessonsExist) {
       return NextResponse.json({ error: 'Some lessons not found' }, { status: 404 });
     }
 

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Eye, Edit, Trash2, MoreHorizontal, Settings } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { LessonFormDialog } from '../molecules/lesson-form-dialog';
+import { BulkLessonOperationsDialog } from '../molecules/bulk-lesson-operations-dialog';
 import { useAdminLessons, useDeleteLesson, useCreateLesson, useUpdateLesson } from '../../hooks/use-admin-lessons';
 import { toast } from 'sonner';
 
@@ -40,6 +42,8 @@ export function LessonsManagement() {
   const updateLesson = useUpdateLesson();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
+  const [bulkOperationsOpen, setBulkOperationsOpen] = useState(false);
 
   const handleAdd = () => {
     setEditingLesson(null);
@@ -83,6 +87,38 @@ export function LessonsManagement() {
   };
 
   const columns: ColumnDef<Lesson>[] = [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => {
+            table.toggleAllPageRowsSelected(!!value);
+            if (value) {
+              setSelectedLessonIds(lessons.map((lesson: Lesson) => lesson.id));
+            } else {
+              setSelectedLessonIds([]);
+            }
+          }}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={selectedLessonIds.includes(row.original.id)}
+          onCheckedChange={(value) => {
+            if (value) {
+              setSelectedLessonIds([...selectedLessonIds, row.original.id]);
+            } else {
+              setSelectedLessonIds(selectedLessonIds.filter(id => id !== row.original.id));
+            }
+          }}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: 'title',
       header: 'Lesson',
@@ -203,21 +239,57 @@ export function LessonsManagement() {
 
   return (
     <>
-      <AdminDataTable
-        title="Lesson Content"
-        description="Manage lesson content, videos, and documents"
-        data={lessons}
-        columns={columns}
-        onAdd={handleAdd}
-        searchColumn="title"
-        isLoading={isLoading}
-      />
+      <div className="space-y-4">
+        {/* Bulk Operations Bar */}
+        {selectedLessonIds.length > 0 && (
+          <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <span className="text-sm font-medium">
+              {selectedLessonIds.length} lesson(s) selected
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBulkOperationsOpen(true)}
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                Bulk Operations
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedLessonIds([])}
+              >
+                Clear Selection
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <AdminDataTable
+          title="Lesson Content"
+          description="Manage lesson content, videos, and documents"
+          data={lessons}
+          columns={columns}
+          onAdd={handleAdd}
+          searchColumn="title"
+          isLoading={isLoading}
+        />
+      </div>
       
       <LessonFormDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         lesson={editingLesson}
         onSave={handleSave}
+      />
+
+      <BulkLessonOperationsDialog
+        lessons={lessons}
+        selectedLessonIds={selectedLessonIds}
+        onSelectionChange={setSelectedLessonIds}
+        open={bulkOperationsOpen}
+        onOpenChange={setBulkOperationsOpen}
       />
     </>
   );

@@ -113,7 +113,7 @@ export function LessonAssignmentDialog({
     removeLessonMutation.mutate(lessonId);
   };
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
 
     const items = Array.from(assignedLessons);
@@ -121,11 +121,19 @@ export function LessonAssignmentDialog({
     items.splice(result.destination.index, 0, reorderedItem);
 
     // Update orders for all lessons
-    const lessonIds = items.map(lesson => lesson.id);
-    const orders = items.map((_, index) => index);
+    const lessonOrders = items.map((lesson, index) => ({
+      lessonId: lesson.id,
+      order: index,
+    }));
 
-    // TODO: Implement reordering API call
-    console.log('Reorder lessons:', { lessonIds, orders });
+    try {
+      await axios.put(`/api/modules/${moduleId}/lessons/order`, { lessonOrders });
+      queryClient.invalidateQueries({ queryKey: ['module-lessons', moduleId] });
+      toast.success('Lesson order updated successfully');
+    } catch (error) {
+      toast.error('Failed to update lesson order');
+      console.error('Error reordering lessons:', error);
+    }
   };
 
   if (isLoading) {
