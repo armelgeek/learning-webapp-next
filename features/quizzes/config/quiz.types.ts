@@ -6,7 +6,7 @@ export type UpdateQuizPayload = z.infer<typeof updateQuizSchema>;
 export type QuizFilter = z.infer<typeof quizFilterSchema>;
 export type QuizAnswer = z.infer<typeof quizAnswerSchema>;
 
-export type QuizType = 'multiple_choice' | 'flashcard';
+export type QuizType = 'multiple_choice' | 'flashcard' | 'fill_blanks' | 'translation' | 'dictation' | 'pronunciation';
 
 export interface Quiz {
   id: string;

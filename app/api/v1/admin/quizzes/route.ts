@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminQuizzesUseCase } from '@/features/admin/domain/use-cases/get-admin-quizzes.use-case';
-import { QuizFilter } from '@/features/quizzes/config/quiz.types';
+import { QuizFilter, QuizType } from '@/features/quizzes/config/quiz.types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (type && type !== 'all') {
-      filter.type = type as 'multiple_choice' | 'flashcard' | 'fill_blanks' | 'translation' | 'dictation' | 'pronunciation';
+      filter.type = type as QuizType;
     }
 
     // Use the business logic layer to get quizzes for admin

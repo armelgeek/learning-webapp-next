@@ -3,16 +3,19 @@ import { auth } from '@/auth';
 import { db } from '@/drizzle/db';
 import { modules, moduleLessons, lessons, userProgress, userModuleProgress } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { updateModuleUseCase } from '@/features/modules/domain/use-cases/update-module.use-case';
+import { deleteModuleUseCase } from '@/features/modules/domain/use-cases/delete-module.use-case';
+import { updateModuleSchema } from '@/features/modules/config/module.schema';
 
-interface RouteParams {
-  params: {
+interface RouteContext {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     // Get user session for progress tracking
     const session = await auth.api.getSession({
@@ -52,7 +55,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       ...lesson,
       moduleOrder: order,
       completed: false,
-      score: null,
+      score: null as number | null,
     }));
 
     let moduleProgress = null;
@@ -113,6 +116,71 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error('GET /api/modules/[id] error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest, context: RouteContext) {
+  try {
+    // Check authentication
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+    const body = await request.json();
+    
+    // Validate request body
+    const validationResult = updateModuleSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid module data', details: validationResult.error.format() },
+        { status: 400 }
+      );
+    }
+    
+    const result = await updateModuleUseCase(id, validationResult.data);
+    
+    if (!result.success) {
+      console.error('Error updating module:', result.error);
+      return NextResponse.json({ error: result.error }, { status: 500 });
+    }
+
+    return NextResponse.json(result.data);
+  } catch (error) {
+    console.error('PUT /api/modules/[id] error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    // Check authentication
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+
+    const result = await deleteModuleUseCase(id);
+    
+    if (!result.success) {
+      console.error('Error deleting module:', result.error);
+      return NextResponse.json({ error: result.error }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: 'Module deleted successfully' });
+  } catch (error) {
+    console.error('DELETE /api/modules/[id] error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

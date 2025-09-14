@@ -4,13 +4,13 @@ import { db } from '@/drizzle/db';
 import { dailyChallenges } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 
-interface RouteParams {
-  params: {
+interface RouteContext {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     // Check authentication
     const session = await auth.api.getSession({
@@ -21,7 +21,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
 
     // Check if challenge exists
     const existingChallenge = await db

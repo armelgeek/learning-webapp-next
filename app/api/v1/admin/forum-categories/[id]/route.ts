@@ -6,11 +6,11 @@ import {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
-    const { id } = params;
+    const { id } = await context.params;
 
     // Use the business logic layer to update forum category
     const result = await updateForumCategoryUseCase(id, body);
@@ -30,10 +30,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     // Use the business logic layer to delete forum category
     const result = await deleteForumCategoryUseCase(id);

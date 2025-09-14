@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
 
-    const weeklyProgress = await db
+    const weeklyChallenges = await db
       .select({
         completed: userDailyChallenges.completed,
         currentProgress: userDailyChallenges.currentProgress,
@@ -163,8 +163,8 @@ export async function GET(request: NextRequest) {
         },
       },
       insights,
-      challengesCompleted: weeklyProgress.filter(p => p.completed).length,
-      totalChallengesThisWeek: weeklyProgress.length,
+      challengesCompleted: weeklyChallenges.filter(p => p.completed).length,
+      totalChallengesThisWeek: weeklyChallenges.length,
     };
 
     return NextResponse.json({

@@ -77,7 +77,7 @@ export async function GET() {
     const recentUsersResult = await db
       .select({ count: count() })
       .from(users)
-      .where(gte(users.createdAt, sevenDaysAgo.toISOString()));
+      .where(gte(users.createdAt, sevenDaysAgo));
 
     return NextResponse.json({
       success: true,

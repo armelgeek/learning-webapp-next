@@ -417,10 +417,10 @@ export class ModuleService {
     const conditions = [];
     
     if (filter?.language) {
-      conditions.push(eq(modules.language, filter.language));
+      conditions.push(eq(modules.language, filter.language as Language));
     }
     if (filter?.difficultyLevel) {
-      conditions.push(eq(modules.difficultyLevel, filter.difficultyLevel));
+      conditions.push(eq(modules.difficultyLevel, filter.difficultyLevel as DifficultyLevel));
     }
     if (filter?.isActive !== undefined) {
       conditions.push(eq(modules.isActive, filter.isActive));

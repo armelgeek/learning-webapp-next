@@ -7,15 +7,15 @@ import { updateQuizUseCase } from '@/features/quizzes/domain/use-cases/update-qu
 import { deleteQuizUseCase } from '@/features/quizzes/domain/use-cases/delete-quiz.use-case';
 import { getQuizByIdUseCase } from '@/features/quizzes/domain/use-cases/get-quiz-by-id.use-case';
 
-interface RouteParams {
-  params: {
+interface RouteContext {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     const result = await getQuizByIdUseCase(id);
     
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
     // Check authentication
     const session = await auth.api.getSession({
@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json();
     
     // Validate request body
@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     // Check authentication
     const session = await auth.api.getSession({
@@ -80,7 +80,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
 
     const result = await deleteQuizUseCase(id);
     
