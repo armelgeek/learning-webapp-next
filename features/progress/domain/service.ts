@@ -3,6 +3,17 @@ import { userProgress, userStats, lessons, users } from '@/drizzle/schema';
 import { and, avg, count, desc, eq, sql } from 'drizzle-orm';
 import { CreateProgressPayload, UpdateProgressPayload, ProgressFilter, UpdateUserStatsPayload } from '../config/progress.types';
 
+// Helper function to safely convert dates to ISO strings
+const safeToISOString = (value: any): string | null => {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return null;
+};
+
 export class ProgressService {
   static async getUserProgress(userId: string, lessonId?: string) {
     const conditions = [eq(userProgress.userId, userId)];
@@ -30,9 +41,9 @@ export class ProgressService {
     // Convert Date objects to ISO strings for JSON serialization
     return result.map(progress => ({
       ...progress,
-      completedAt: progress.completedAt?.toISOString() || null,
-      createdAt: progress.createdAt?.toISOString() || null,
-      updatedAt: progress.updatedAt?.toISOString() || null,
+      completedAt: safeToISOString(progress.completedAt),
+      createdAt: safeToISOString(progress.createdAt),
+      updatedAt: safeToISOString(progress.updatedAt),
     }));
   }
 
@@ -75,9 +86,9 @@ export class ProgressService {
       const progress = result[0];
       return {
         ...progress,
-        completedAt: progress.completedAt?.toISOString() || null,
-        createdAt: progress.createdAt?.toISOString() || null,
-        updatedAt: progress.updatedAt?.toISOString() || null,
+        completedAt: safeToISOString(progress.completedAt),
+        createdAt: safeToISOString(progress.createdAt),
+        updatedAt: safeToISOString(progress.updatedAt),
       };
     } else {
       // Create new progress
@@ -105,9 +116,9 @@ export class ProgressService {
       const progress = result[0];
       return {
         ...progress,
-        completedAt: progress.completedAt?.toISOString() || null,
-        createdAt: progress.createdAt?.toISOString() || null,
-        updatedAt: progress.updatedAt?.toISOString() || null,
+        completedAt: safeToISOString(progress.completedAt),
+        createdAt: safeToISOString(progress.createdAt),
+        updatedAt: safeToISOString(progress.updatedAt),
       };
     }
   }
@@ -145,9 +156,9 @@ export class ProgressService {
     // Convert Date objects to ISO strings for JSON serialization
     return {
       ...stats,
-      lastPracticeDate: stats.lastPracticeDate?.toISOString() || null,
-      createdAt: stats.createdAt?.toISOString() || null,
-      updatedAt: stats.updatedAt?.toISOString() || null,
+      lastPracticeDate: safeToISOString(stats.lastPracticeDate),
+      createdAt: safeToISOString(stats.createdAt),
+      updatedAt: safeToISOString(stats.updatedAt),
     };
   }
 
@@ -187,9 +198,9 @@ export class ProgressService {
       const stats = result[0];
       return {
         ...stats,
-        lastPracticeDate: stats.lastPracticeDate?.toISOString() || null,
-        createdAt: stats.createdAt?.toISOString() || null,
-        updatedAt: stats.updatedAt?.toISOString() || null,
+        lastPracticeDate: safeToISOString(stats.lastPracticeDate),
+        createdAt: safeToISOString(stats.createdAt),
+        updatedAt: safeToISOString(stats.updatedAt),
       };
     } else {
       const result = await db
@@ -229,9 +240,9 @@ export class ProgressService {
       const stats = result[0];
       return {
         ...stats,
-        lastPracticeDate: stats.lastPracticeDate?.toISOString() || null,
-        createdAt: stats.createdAt?.toISOString() || null,
-        updatedAt: stats.updatedAt?.toISOString() || null,
+        lastPracticeDate: safeToISOString(stats.lastPracticeDate),
+        createdAt: safeToISOString(stats.createdAt),
+        updatedAt: safeToISOString(stats.updatedAt),
       };
     }
   }
@@ -348,9 +359,9 @@ export class ProgressService {
     // Convert Date objects to ISO strings for JSON serialization
     return result.map(progress => ({
       ...progress,
-      completedAt: progress.completedAt?.toISOString() || null,
-      createdAt: progress.createdAt?.toISOString() || null,
-      updatedAt: progress.updatedAt?.toISOString() || null,
+      completedAt: safeToISOString(progress.completedAt),
+      createdAt: safeToISOString(progress.createdAt),
+      updatedAt: safeToISOString(progress.updatedAt),
     }));
   }
 
@@ -399,9 +410,9 @@ export class ProgressService {
     // Convert Date objects to ISO strings for JSON serialization
     return result.map(stats => ({
       ...stats,
-      lastPracticeDate: stats.lastPracticeDate?.toISOString() || null,
-      createdAt: stats.createdAt?.toISOString() || null,
-      updatedAt: stats.updatedAt?.toISOString() || null,
+      lastPracticeDate: safeToISOString(stats.lastPracticeDate),
+      createdAt: safeToISOString(stats.createdAt),
+      updatedAt: safeToISOString(stats.updatedAt),
     }));
   }
 
