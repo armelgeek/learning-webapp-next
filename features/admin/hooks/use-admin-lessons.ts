@@ -23,6 +23,21 @@ export function useAdminLessons(filters?: {
   });
 }
 
+// Create lesson
+export function useCreateLesson() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await axios.post('/api/lessons', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+    },
+  });
+}
+
 // Update lesson
 export function useUpdateLesson() {
   const queryClient = useQueryClient();
@@ -45,21 +60,6 @@ export function useDeleteLesson() {
   return useMutation({
     mutationFn: async (id: string) => {
       const response = await axios.delete(`/api/lessons/${id}`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
-    },
-  });
-}
-
-// Create lesson
-export function useCreateLesson() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: any) => {
-      const response = await axios.post('/api/lessons', data);
       return response.data;
     },
     onSuccess: () => {

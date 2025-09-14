@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
-import { useAdminLessons, useDeleteLesson } from '../../hooks/use-admin-lessons';
+import { LessonFormDialog } from '../molecules/lesson-form-dialog';
+import { useAdminLessons, useDeleteLesson, useCreateLesson, useUpdateLesson } from '../../hooks/use-admin-lessons';
 import { toast } from 'sonner';
 
 type Lesson = {
@@ -34,10 +36,19 @@ type Lesson = {
 export function LessonsManagement() {
   const { data: lessons = [], isLoading, error } = useAdminLessons();
   const deleteLesson = useDeleteLesson();
+  const createLesson = useCreateLesson();
+  const updateLesson = useUpdateLesson();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+
+  const handleAdd = () => {
+    setEditingLesson(null);
+    setIsDialogOpen(true);
+  };
 
   const handleEdit = (lesson: Lesson) => {
-    console.log('Edit lesson:', lesson.id);
-    // TODO: Open edit dialog
+    setEditingLesson(lesson);
+    setIsDialogOpen(true);
   };
 
   const handleDelete = async (lessonId: string) => {
@@ -49,6 +60,25 @@ export function LessonsManagement() {
         toast.error('Failed to delete lesson');
         console.error('Error deleting lesson:', error);
       }
+    }
+  };
+
+  const handleSave = async (lessonData: any) => {
+    try {
+      if (editingLesson) {
+        // Update existing lesson
+        await updateLesson.mutateAsync({ id: editingLesson.id, ...lessonData });
+        toast.success('Lesson updated successfully');
+      } else {
+        // Create new lesson
+        await createLesson.mutateAsync(lessonData);
+        toast.success('Lesson created successfully');
+      }
+      setIsDialogOpen(false);
+      setEditingLesson(null);
+    } catch (error) {
+      toast.error(editingLesson ? 'Failed to update lesson' : 'Failed to create lesson');
+      console.error('Error saving lesson:', error);
     }
   };
 
@@ -172,14 +202,23 @@ export function LessonsManagement() {
   }
 
   return (
-    <AdminDataTable
-      title="Lesson Content"
-      description="Manage lesson content, videos, and documents"
-      data={lessons}
-      columns={columns}
-      onAdd={() => console.log('Add new lesson')}
-      searchColumn="title"
-      isLoading={isLoading}
-    />
+    <>
+      <AdminDataTable
+        title="Lesson Content"
+        description="Manage lesson content, videos, and documents"
+        data={lessons}
+        columns={columns}
+        onAdd={handleAdd}
+        searchColumn="title"
+        isLoading={isLoading}
+      />
+      
+      <LessonFormDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        lesson={editingLesson}
+        onSave={handleSave}
+      />
+    </>
   );
 }
