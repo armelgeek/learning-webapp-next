@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Eye, Edit, Trash2, MoreHorizontal, BookOpen, Link } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { ModuleFormDialog } from '../molecules/module-form-dialog';
+import { LessonAssignmentDialog } from '../molecules/lesson-assignment-dialog';
+import { ModulePrerequisiteDialog } from '../molecules/module-prerequisite-dialog';
 import { useAdminModules, useDeleteModule, useCreateModule, useUpdateModule } from '../../hooks/use-admin-modules';
 import { toast } from 'sonner';
 
@@ -39,6 +41,9 @@ export function ModulesManagement() {
   const updateModule = useUpdateModule();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [lessonAssignmentOpen, setLessonAssignmentOpen] = useState(false);
+  const [prerequisiteDialogOpen, setPrerequisiteDialogOpen] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
   const handleAdd = () => {
     setEditingModule(null);
@@ -48,6 +53,16 @@ export function ModulesManagement() {
   const handleEdit = (module: Module) => {
     setEditingModule(module);
     setIsDialogOpen(true);
+  };
+
+  const handleManageLessons = (module: Module) => {
+    setSelectedModule(module);
+    setLessonAssignmentOpen(true);
+  };
+
+  const handleManagePrerequisites = (module: Module) => {
+    setSelectedModule(module);
+    setPrerequisiteDialogOpen(true);
   };
 
   const handleDelete = async (moduleId: string) => {
@@ -165,6 +180,14 @@ export function ModulesManagement() {
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleManageLessons(module)}>
+                <BookOpen className="mr-2 h-4 w-4" />
+                Manage Lessons
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleManagePrerequisites(module)}>
+                <Link className="mr-2 h-4 w-4" />
+                Prerequisites
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleEdit(module)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
@@ -213,6 +236,24 @@ export function ModulesManagement() {
         module={editingModule}
         onSave={handleSave}
       />
+
+      {selectedModule && (
+        <>
+          <LessonAssignmentDialog
+            moduleId={selectedModule.id}
+            moduleName={selectedModule.title}
+            open={lessonAssignmentOpen}
+            onOpenChange={setLessonAssignmentOpen}
+          />
+
+          <ModulePrerequisiteDialog
+            moduleId={selectedModule.id}
+            moduleName={selectedModule.title}
+            open={prerequisiteDialogOpen}
+            onOpenChange={setPrerequisiteDialogOpen}
+          />
+        </>
+      )}
     </>
   );
 }
