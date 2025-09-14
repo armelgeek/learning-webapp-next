@@ -1,7 +1,7 @@
 import { db } from '@/drizzle/db';
 import { lessons, userProgress, modules, moduleLessons, users } from '@/drizzle/schema';
-import { and, desc, eq, sql, count } from 'drizzle-orm';
-import { CreateLessonPayload, UpdateLessonPayload, LessonFilter } from '../config/lesson.types';
+import { and, desc, eq, sql, count, inArray } from 'drizzle-orm';
+import { CreateLessonPayload, UpdateLessonPayload, LessonFilter, PrerequisiteCheck, LessonWithProgress, LessonContent } from '../config/lesson.types';
 
 export class LessonService {
   static async getLessons(filter?: LessonFilter) {
@@ -48,6 +48,9 @@ export class LessonService {
     // Convert Date objects to ISO strings for JSON serialization
     return result.map(lesson => ({
       ...lesson,
+      content: lesson.content as LessonContent,
+      prerequisites: lesson.prerequisites ? JSON.parse(lesson.prerequisites) : [],
+      tags: lesson.tags ? JSON.parse(lesson.tags) : [],
       createdAt: lesson.createdAt?.toISOString() || null,
       updatedAt: lesson.updatedAt?.toISOString() || null,
     }));
@@ -85,6 +88,9 @@ export class LessonService {
     // Convert Date objects to ISO strings for JSON serialization
     return {
       ...lesson,
+      content: lesson.content as LessonContent,
+      prerequisites: lesson.prerequisites ? JSON.parse(lesson.prerequisites) : [],
+      tags: lesson.tags ? JSON.parse(lesson.tags) : [],
       createdAt: lesson.createdAt?.toISOString() || null,
       updatedAt: lesson.updatedAt?.toISOString() || null,
     };
@@ -111,10 +117,24 @@ export class LessonService {
   }
 
   static async createLesson(data: CreateLessonPayload) {
+    // Validate prerequisites exist if provided
+    if (data.prerequisites && data.prerequisites.length > 0) {
+      const existingLessons = await db
+        .select({ id: lessons.id })
+        .from(lessons)
+        .where(inArray(lessons.id, data.prerequisites));
+      
+      if (existingLessons.length !== data.prerequisites.length) {
+        throw new Error('Some prerequisite lessons do not exist');
+      }
+    }
+
     const result = await db
       .insert(lessons)
       .values({
         ...data,
+        prerequisites: data.prerequisites ? JSON.stringify(data.prerequisites) : null,
+        tags: data.tags ? JSON.stringify(data.tags) : null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -124,12 +144,34 @@ export class LessonService {
   }
 
   static async updateLesson(id: string, data: Partial<UpdateLessonPayload>) {
+    // Validate prerequisites exist if provided
+    if (data.prerequisites && data.prerequisites.length > 0) {
+      const existingLessons = await db
+        .select({ id: lessons.id })
+        .from(lessons)
+        .where(inArray(lessons.id, data.prerequisites));
+      
+      if (existingLessons.length !== data.prerequisites.length) {
+        throw new Error('Some prerequisite lessons do not exist');
+      }
+    }
+
+    const updateData: any = {
+      ...data,
+      updatedAt: new Date(),
+    };
+
+    if (data.prerequisites !== undefined) {
+      updateData.prerequisites = data.prerequisites ? JSON.stringify(data.prerequisites) : null;
+    }
+
+    if (data.tags !== undefined) {
+      updateData.tags = data.tags ? JSON.stringify(data.tags) : null;
+    }
+
     const result = await db
       .update(lessons)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(lessons.id, id))
       .returning();
 
@@ -145,7 +187,62 @@ export class LessonService {
     return result[0] || null;
   }
 
-  static async getLessonsWithUserProgress(userId: string, filter?: LessonFilter) {
+  static async checkPrerequisites(lessonId: string, userId: string): Promise<PrerequisiteCheck> {
+    // Get the lesson and its prerequisites
+    const lesson = await this.getLessonById(lessonId);
+    if (!lesson) {
+      throw new Error('Lesson not found');
+    }
+
+    const prerequisites = lesson.prerequisites || [];
+    
+    if (prerequisites.length === 0) {
+      return {
+        lessonId,
+        isUnlocked: true,
+        unmetPrerequisites: [],
+        prerequisiteDetails: [],
+      };
+    }
+
+    // Get prerequisite lessons and user progress for them
+    const prerequisiteData = await db
+      .select({
+        lesson: {
+          id: lessons.id,
+          title: lessons.title,
+        },
+        progress: userProgress,
+      })
+      .from(lessons)
+      .leftJoin(
+        userProgress,
+        and(
+          eq(userProgress.lessonId, lessons.id),
+          eq(userProgress.userId, userId)
+        )
+      )
+      .where(inArray(lessons.id, prerequisites));
+
+    const prerequisiteDetails = prerequisiteData.map(item => ({
+      id: item.lesson.id,
+      title: item.lesson.title,
+      completed: item.progress?.completed || false,
+    }));
+
+    const unmetPrerequisites = prerequisiteDetails
+      .filter(prereq => !prereq.completed)
+      .map(prereq => prereq.id);
+
+    return {
+      lessonId,
+      isUnlocked: unmetPrerequisites.length === 0,
+      unmetPrerequisites,
+      prerequisiteDetails,
+    };
+  }
+
+  static async getLessonsWithUserProgress(userId: string, filter?: LessonFilter): Promise<LessonWithProgress[]> {
     const conditions = [];
     
     if (filter?.language) {
@@ -161,7 +258,7 @@ export class LessonService {
       conditions.push(eq(lessons.isActive, filter.isActive));
     }
 
-    return await db
+    const result = await db
       .select({
         lesson: lessons,
         progress: userProgress,
@@ -176,6 +273,49 @@ export class LessonService {
       )
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(lessons.order, lessons.createdAt);
+
+    // Process each lesson to check prerequisites
+    const lessonsWithProgress: LessonWithProgress[] = [];
+    
+    for (const item of result) {
+      const lesson = item.lesson;
+      const progress = item.progress;
+      
+      // Check prerequisites for this lesson
+      const prerequisiteCheck = await this.checkPrerequisites(lesson.id, userId);
+      
+      lessonsWithProgress.push({
+        id: lesson.id,
+        title: lesson.title,
+        description: lesson.description || undefined,
+        language: lesson.language,
+        type: lesson.type,
+        content: lesson.content as LessonContent,
+        audioUrl: lesson.audioUrl || undefined,
+        videoUrl: lesson.videoUrl || undefined,
+        imageUrl: lesson.imageUrl || undefined,
+        difficultyLevel: lesson.difficultyLevel,
+        estimatedDuration: lesson.estimatedDuration,
+        pointsReward: lesson.pointsReward,
+        isActive: lesson.isActive,
+        order: lesson.order,
+        prerequisites: lesson.prerequisites ? JSON.parse(lesson.prerequisites) : [],
+        tags: lesson.tags ? JSON.parse(lesson.tags) : [],
+        createdAt: lesson.createdAt,
+        updatedAt: lesson.updatedAt,
+        progress: progress ? {
+          id: progress.id,
+          completed: progress.completed,
+          score: progress.score || undefined,
+          attempts: progress.attempts,
+          completedAt: progress.completedAt || undefined,
+        } : undefined,
+        isUnlocked: prerequisiteCheck.isUnlocked,
+        unmetPrerequisites: prerequisiteCheck.unmetPrerequisites,
+      });
+    }
+
+    return lessonsWithProgress;
   }
 
   // Admin-specific methods
@@ -234,8 +374,34 @@ export class LessonService {
     // Convert Date objects to ISO strings for JSON serialization
     return result.map(lesson => ({
       ...lesson,
+      content: lesson.content as LessonContent,
+      prerequisites: lesson.prerequisites ? JSON.parse(lesson.prerequisites) : [],
+      tags: lesson.tags ? JSON.parse(lesson.tags) : [],
       createdAt: lesson.createdAt?.toISOString() || null,
       updatedAt: lesson.updatedAt?.toISOString() || null,
     }));
+  }
+
+  static async getAvailableLessonsForPrerequisites(excludeLessonId?: string) {
+    const conditions = [eq(lessons.isActive, true)];
+    
+    if (excludeLessonId) {
+      conditions.push(sql`${lessons.id} != ${excludeLessonId}`);
+    }
+
+    const result = await db
+      .select({
+        id: lessons.id,
+        title: lessons.title,
+        language: lessons.language,
+        type: lessons.type,
+        difficultyLevel: lessons.difficultyLevel,
+        order: lessons.order,
+      })
+      .from(lessons)
+      .where(and(...conditions))
+      .orderBy(lessons.order, lessons.title);
+
+    return result;
   }
 }

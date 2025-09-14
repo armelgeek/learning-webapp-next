@@ -8,26 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSession } from '@/auth-client';
-
-interface Lesson {
-  id: string;
-  title: string;
-  type: string;
-  difficultyLevel: string;
-  language: string;
-  [key: string]: unknown;
-}
-
-interface UserProgress {
-  lessonId: string;
-  completed: boolean;
-  score: number;
-  [key: string]: unknown;
-}
 import { useUserLanguagePreferences } from '@/features/language/hooks/use-language-preferences';
 import { LANGUAGES, type LanguageKey } from '@/features/language/config/language.schema';
 import { ModuleProgressionView } from '@/features/modules/components/organisms/module-progression-view';
 import { LessonList } from '@/features/lessons/components/organisms/lesson-list';
+import { useLessonsWithPrerequisites } from '@/features/lessons/hooks/use-lessons-with-prerequisites';
+import { Language, LessonType, DifficultyLevel } from '@/features/lessons/config/lesson.types';
 
 export default function LessonsPage() {
   const { data: session } = useSession();
@@ -185,65 +171,21 @@ function LegacyLessonsView({
 }) {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
-  const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
+  const userId = session?.user?.id;
 
-  useEffect(() => {
-    const fetchLessons = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams();
-        if (language !== 'all') params.append('language', language);
-        if (selectedType !== 'all') params.append('type', selectedType);
-        if (selectedLevel !== 'all') params.append('difficultyLevel', selectedLevel);
-        
-        const response = await fetch(`/api/lessons?${params.toString()}`);
-        if (response.ok) {
-          const data = await response.json();
-          setLessons(data);
-        } else {
-          console.error('Failed to fetch lessons');
-        }
-      } catch (error) {
-        console.error('Error fetching lessons:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLessons();
-  }, [language, selectedType, selectedLevel]);
-
-  // Fetch user progress when user session is available
-  useEffect(() => {
-    const fetchProgress = async () => {
-      if (!session?.user) return;
-      
-      try {
-        const response = await fetch('/api/progress');
-        if (response.ok) {
-          const progressData = await response.json();
-          setUserProgress(progressData);
-        } else {
-          console.error('Failed to fetch user progress');
-        }
-      } catch (error) {
-        console.error('Error fetching user progress:', error);
-      }
-    };
-
-    if (session?.user) {
-      fetchProgress();
-    }
-  }, [session?.user]);
-
-  const getProgress = (lessonId: string) => {
-    return userProgress.find(p => p.lessonId === lessonId);
+  // Build filter for lessons
+  const filter = {
+    language: language !== 'all' ? (language as Language) : undefined,
+    type: selectedType !== 'all' ? (selectedType as LessonType) : undefined,
+    difficultyLevel: selectedLevel !== 'all' ? (selectedLevel as DifficultyLevel) : undefined,
+    isActive: true,
   };
 
-  if (loading) {
+  // Use the new hook for lessons with prerequisites
+  const { lessons, isLoading } = useLessonsWithPrerequisites(userId || '', filter);
+
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap gap-4">
@@ -257,6 +199,17 @@ function LegacyLessonsView({
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Please log in to view lessons with your progress.
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -296,12 +249,9 @@ function LegacyLessonsView({
         </div>
       </div>
 
-      {/* Transform lessons data for LessonList component */}
+      {/* Use the new LessonList component with prerequisite-aware lessons */}
       <LessonList
-        lessons={lessons.map(lesson => ({
-          lesson,
-          progress: getProgress(lesson.id)
-        }))}
+        lessons={lessons}
         onLessonClick={onStartLesson}
       />
     </div>
