@@ -317,33 +317,52 @@ export function LessonFormDialog({
                 control={form.control}
                 name="moduleId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Module (Optional)</FormLabel>
+                  <FormItem className="md:col-span-2">
+                    <FormLabel className="flex items-center gap-2">
+                      📚 Module Assignment (Optional)
+                    </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={isLoadingModules ? "Loading modules..." : "Select a module (optional)"} />
+                        <SelectTrigger className="h-auto">
+                          <SelectValue placeholder={isLoadingModules ? "🔄 Loading modules..." : "Choose a module to organize this lesson"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No Module</SelectItem>
+                        <SelectItem value="" className="py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">🚫</span>
+                            <div>
+                              <div className="font-medium">No Module</div>
+                              <div className="text-sm text-gray-500">Lesson will not be assigned to any module</div>
+                            </div>
+                          </div>
+                        </SelectItem>
                         {availableModules.map((module: any) => (
-                          <SelectItem key={module.id} value={module.id}>
-                            <div className="flex items-center gap-2">
-                              <span>{module.title}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {module.language}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {module.difficultyLevel}
-                              </Badge>
+                          <SelectItem key={module.id} value={module.id} className="py-3">
+                            <div className="flex items-center gap-3 w-full">
+                              <span className="text-xl">🎯</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate">{module.title}</div>
+                                <div className="text-sm text-gray-500 truncate">
+                                  {module.description || 'No description'}
+                                </div>
+                                <div className="flex gap-1 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {module.language}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {module.difficultyLevel}
+                                  </Badge>
+                                </div>
+                              </div>
                             </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
-                      Assign this lesson to a module for better organization
+                    <FormDescription className="text-sm">
+                      💡 Assigning this lesson to a module helps students follow a structured learning path. 
+                      Lessons in modules are automatically ordered and unlocked progressively.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

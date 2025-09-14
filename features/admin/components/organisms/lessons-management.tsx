@@ -128,9 +128,18 @@ export function LessonsManagement() {
           <span className="text-sm text-muted-foreground line-clamp-2">
             {row.original.description}
           </span>
-          <span className="text-xs text-muted-foreground">
-            Module: {row.original.moduleTitle}
-          </span>
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-xs text-muted-foreground">Module:</span>
+            {row.original.moduleTitle !== 'No Module' ? (
+              <Badge variant="outline" className="text-xs">
+                {row.original.moduleTitle}
+              </Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground italic">
+                No module assigned
+              </span>
+            )}
+          </div>
         </div>
       ),
     },
@@ -267,8 +276,8 @@ export function LessonsManagement() {
         )}
 
         <AdminDataTable
-          title="Lesson Content"
-          description="Manage lesson content, videos, and documents"
+          title="📚 Lesson Management"
+          description="Create, edit, and organize lessons. Assign lessons to modules for structured learning paths."
           data={lessons}
           columns={columns}
           onAdd={handleAdd}
