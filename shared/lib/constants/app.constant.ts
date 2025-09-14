@@ -61,11 +61,6 @@ export const navItems: NavItem[] = [
         icon: 'bookOpen'
       },
       {
-        title: 'Lessons',
-        url: '/d/lessons',
-        icon: 'fileText'
-      },
-      {
         title: 'Quizzes',
         url: '/d/quizzes',
         icon: 'helpCircle'

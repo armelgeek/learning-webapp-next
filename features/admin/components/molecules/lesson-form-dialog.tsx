@@ -69,6 +69,7 @@ interface LessonFormDialogProps {
   lesson?: any;
   onSave: (data: CreateLessonPayload) => void;
   availableLessons?: Array<{ id: string; title: string; }>;
+  defaultModuleId?: string; // Pre-select a specific module
 }
 
 export function LessonFormDialog({
@@ -77,6 +78,7 @@ export function LessonFormDialog({
   lesson,
   onSave,
   availableLessons = [],
+  defaultModuleId,
 }: LessonFormDialogProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
@@ -112,11 +114,11 @@ export function LessonFormDialog({
       order: 0,
       prerequisites: [],
       tags: [],
-      moduleId: undefined,
+      moduleId: defaultModuleId || undefined, // Use defaultModuleId if provided
     },
   });
 
-  // Update form when lesson data is available (for editing)
+  // Update form when lesson data is available (for editing) or when defaultModuleId changes
   useEffect(() => {
     if (effectiveLesson) {
       form.reset({
@@ -142,8 +144,11 @@ export function LessonFormDialog({
         moduleId: effectiveLesson.moduleId || undefined,
       });
       setTags(effectiveLesson.tags || []);
+    } else if (defaultModuleId && !lesson) {
+      // When creating a new lesson with a pre-selected module
+      form.setValue('moduleId', defaultModuleId);
     }
-  }, [effectiveLesson, form]);
+  }, [effectiveLesson, form, defaultModuleId, lesson]);
 
   const onSubmit = (data: CreateLessonPayload) => {
     const submitData = {
