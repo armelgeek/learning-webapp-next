@@ -20,11 +20,13 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X, Plus, GripVertical } from 'lucide-react';
+import { X, Plus, GripVertical, BookPlus } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import { LessonFormDialog } from './lesson-form-dialog';
+import { useCreateLesson } from '../../hooks/use-admin-lessons';
 
 interface Lesson {
   id: string;
@@ -51,6 +53,8 @@ export function LessonAssignmentDialog({
 }: LessonAssignmentProps) {
   const queryClient = useQueryClient();
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');
+  const [isLessonFormOpen, setIsLessonFormOpen] = useState(false);
+  const createLesson = useCreateLesson();
 
   // Fetch module lessons
   const { data: moduleData, isLoading } = useQuery({
@@ -133,6 +137,25 @@ export function LessonAssignmentDialog({
     } catch (error) {
       toast.error('Failed to update lesson order');
       console.error('Error reordering lessons:', error);
+    }
+  };
+
+  const handleCreateLesson = async (lessonData: any) => {
+    try {
+      // Create the lesson
+      const newLesson = await createLesson.mutateAsync(lessonData);
+      
+      // Automatically assign it to this module
+      await assignLessonMutation.mutateAsync({
+        lessonIds: [newLesson.id],
+        orders: [assignedLessons.length],
+      });
+      
+      setIsLessonFormOpen(false);
+      toast.success('Lesson created and assigned successfully');
+    } catch (error) {
+      toast.error('Failed to create lesson');
+      console.error('Error creating lesson:', error);
     }
   };
 
@@ -231,9 +254,20 @@ export function LessonAssignmentDialog({
 
           {/* Available Lessons */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">
-              Available Lessons ({availableLessons.length})
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">
+                Available Lessons ({availableLessons.length})
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsLessonFormOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <BookPlus className="h-4 w-4" />
+                Create New Lesson
+              </Button>
+            </div>
             
             {/* Add Lesson Form */}
             <div className="flex gap-2">
@@ -317,6 +351,15 @@ export function LessonAssignmentDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Lesson Creation Dialog */}
+      <LessonFormDialog
+        open={isLessonFormOpen}
+        onOpenChange={setIsLessonFormOpen}
+        lesson={null}
+        onSave={handleCreateLesson}
+        defaultModuleId={moduleId} // Pre-select the current module
+      />
     </Dialog>
   );
 }
