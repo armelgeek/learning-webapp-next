@@ -16,7 +16,7 @@ import { AdminDataTable } from '../molecules/admin-data-table';
 import { ModuleFormDialog } from '../molecules/module-form-dialog';
 import { LessonAssignmentDialog } from '../molecules/lesson-assignment-dialog';
 import { LessonFormDialog } from '../molecules/lesson-form-dialog';
-import { ModulePrerequisiteDialog } from '../molecules/module-prerequisite-dialog';
+import { ModulePrerequisiteSheet } from '../molecules/module-prerequisite-sheet';
 import { useAdminModules, useDeleteModule, useCreateModule, useUpdateModule } from '../../hooks/use-admin-modules';
 import { useCreateLesson } from '../../hooks/use-admin-lessons';
 import { toast } from 'sonner';
@@ -277,7 +277,7 @@ export function ModulesManagement() {
             onOpenChange={setLessonAssignmentOpen}
           />
 
-          <ModulePrerequisiteDialog
+          <ModulePrerequisiteSheet
             moduleId={selectedModule.id}
             moduleName={selectedModule.title}
             open={prerequisiteDialogOpen}

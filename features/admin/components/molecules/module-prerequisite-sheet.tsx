@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { 
   Select,
   SelectContent,
@@ -38,7 +38,7 @@ interface ModulePrerequisiteProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ModulePrerequisiteDialog({ 
+export function ModulePrerequisiteSheet({ 
   moduleId, 
   moduleName, 
   open, 
@@ -120,28 +120,28 @@ export function ModulePrerequisiteDialog({
 
   if (isLoading) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="sm:max-w-[600px]">
           <div className="flex items-center justify-center p-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
               <p>Loading prerequisites...</p>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Manage Prerequisites - {moduleName}</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-[600px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Manage Prerequisites - {moduleName}</SheetTitle>
+          <SheetDescription>
             Configure which modules must be completed before this module becomes available.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <div className="space-y-6">
           {/* Current Prerequisites */}
@@ -256,12 +256,12 @@ export function ModulePrerequisiteDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <SheetFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
