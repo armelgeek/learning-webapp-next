@@ -14,57 +14,27 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { ModuleFormDialog } from '../molecules/module-form-dialog';
+import { useAdminModules, useDeleteModule } from '../../hooks/use-admin-modules';
+import { toast } from 'sonner';
 
-// Mock data for demo - in real app, this would come from API
-const mockModules = [
-  {
-    id: '1',
-    title: 'Spanish Basics',
-    description: 'Learn fundamental Spanish vocabulary and grammar',
-    language: 'spanish',
-    difficultyLevel: 'beginner',
-    imageUrl: '',
-    estimatedDuration: 120,
-    isActive: true,
-    order: 1,
-    lessonsCount: 15,
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z',
-  },
-  {
-    id: '2',
-    title: 'French Conversation',
-    description: 'Practice conversational French with real-world scenarios',
-    language: 'french',
-    difficultyLevel: 'intermediate',
-    imageUrl: '',
-    estimatedDuration: 180,
-    isActive: true,
-    order: 2,
-    lessonsCount: 20,
-    createdAt: '2024-01-10T09:00:00Z',
-    updatedAt: '2024-01-18T14:20:00Z',
-  },
-  {
-    id: '3',
-    title: 'Advanced German Grammar',
-    description: 'Master complex German grammar structures',
-    language: 'german',
-    difficultyLevel: 'advanced',
-    imageUrl: '',
-    estimatedDuration: 240,
-    isActive: false,
-    order: 3,
-    lessonsCount: 25,
-    createdAt: '2024-01-05T08:00:00Z',
-    updatedAt: '2024-01-12T11:15:00Z',
-  },
-];
-
-type Module = typeof mockModules[0];
+type Module = {
+  id: string;
+  title: string;
+  description: string;
+  language: string;
+  difficultyLevel: string;
+  imageUrl: string;
+  estimatedDuration: number;
+  isActive: boolean;
+  order: number;
+  lessonsCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export function ModulesManagement() {
-  const [modules, setModules] = useState<Module[]>(mockModules);
+  const { data: modules = [], isLoading, error } = useAdminModules();
+  const deleteModule = useDeleteModule();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
 
@@ -78,31 +48,21 @@ export function ModulesManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (moduleId: string) => {
+  const handleDelete = async (moduleId: string) => {
     if (confirm('Are you sure you want to delete this module?')) {
-      setModules(modules.filter(m => m.id !== moduleId));
+      try {
+        await deleteModule.mutateAsync(moduleId);
+        toast.success('Module deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete module');
+        console.error('Error deleting module:', error);
+      }
     }
   };
 
   const handleSave = (moduleData: any) => {
-    if (editingModule) {
-      // Update existing module
-      setModules(modules.map(m => 
-        m.id === editingModule.id 
-          ? { ...m, ...moduleData, updatedAt: new Date().toISOString() }
-          : m
-      ));
-    } else {
-      // Add new module
-      const newModule = {
-        ...moduleData,
-        id: Date.now().toString(),
-        lessonsCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setModules([...modules, newModule]);
-    }
+    // TODO: Implement save logic with API
+    console.log('Save module:', moduleData);
     setIsDialogOpen(false);
     setEditingModule(null);
   };
@@ -210,6 +170,17 @@ export function ModulesManagement() {
     },
   ];
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load modules</p>
+          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <AdminDataTable
@@ -219,6 +190,7 @@ export function ModulesManagement() {
         columns={columns}
         onAdd={handleAdd}
         searchColumn="title"
+        isLoading={isLoading}
       />
       
       <ModuleFormDialog

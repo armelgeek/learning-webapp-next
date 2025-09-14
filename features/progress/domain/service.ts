@@ -1,5 +1,5 @@
 import { db } from '@/drizzle/db';
-import { userProgress, userStats, lessons } from '@/drizzle/schema';
+import { userProgress, userStats, lessons, users } from '@/drizzle/schema';
 import { and, avg, count, desc, eq, sql } from 'drizzle-orm';
 import { CreateProgressPayload, UpdateProgressPayload, ProgressFilter, UpdateUserStatsPayload } from '../config/progress.types';
 
@@ -283,5 +283,141 @@ export class ProgressService {
     }
     
     return 0; // Streak broken
+  }
+
+  // Admin-specific methods
+  static async getUserProgressForAdmin(filter?: ProgressFilter) {
+    const conditions = [];
+    
+    if (filter?.userId) {
+      conditions.push(eq(userProgress.userId, filter.userId));
+    }
+    if (filter?.lessonId) {
+      conditions.push(eq(userProgress.lessonId, filter.lessonId));
+    }
+    if (filter?.completed !== undefined) {
+      conditions.push(eq(userProgress.completed, filter.completed));
+    }
+
+    const result = await db
+      .select({
+        id: userProgress.id,
+        userId: userProgress.userId,
+        lessonId: userProgress.lessonId,
+        completed: userProgress.completed,
+        score: userProgress.score,
+        attempts: userProgress.attempts,
+        completedAt: userProgress.completedAt,
+        createdAt: userProgress.createdAt,
+        updatedAt: userProgress.updatedAt,
+        // Join with user information
+        userName: sql<string>`
+          (SELECT CONCAT(u.name) 
+           FROM ${users} u 
+           WHERE u.id = ${userProgress.userId})
+        `,
+        userEmail: sql<string>`
+          (SELECT u.email 
+           FROM ${users} u 
+           WHERE u.id = ${userProgress.userId})
+        `,
+        userAvatar: sql<string | null>`
+          (SELECT u.image 
+           FROM ${users} u 
+           WHERE u.id = ${userProgress.userId})
+        `,
+        // Join with lesson information
+        lessonTitle: sql<string>`
+          (SELECT l.title 
+           FROM ${lessons} l 
+           WHERE l.id = ${userProgress.lessonId})
+        `,
+        moduleTitle: sql<string | null>`
+          'Unknown Module'
+        `,
+        language: sql<string>`
+          (SELECT l.language 
+           FROM ${lessons} l 
+           WHERE l.id = ${userProgress.lessonId})
+        `,
+      })
+      .from(userProgress)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(userProgress.updatedAt));
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return result.map(progress => ({
+      ...progress,
+      completedAt: progress.completedAt?.toISOString() || null,
+      createdAt: progress.createdAt?.toISOString() || null,
+      updatedAt: progress.updatedAt?.toISOString() || null,
+    }));
+  }
+
+  static async getUserStatsForAdmin() {
+    const result = await db
+      .select({
+        id: userStats.id,
+        userId: userStats.userId,
+        streakDays: userStats.streakDays,
+        longestStreak: userStats.longestStreak,
+        totalLessonsCompleted: userStats.totalLessonsCompleted,
+        totalWordsLearned: userStats.totalWordsLearned,
+        totalStudyTime: userStats.totalStudyTime,
+        currentLevel: userStats.currentLevel,
+        totalPoints: userStats.totalPoints,
+        weeklyPoints: userStats.weeklyPoints,
+        monthlyPoints: userStats.monthlyPoints,
+        level: userStats.level,
+        experience: userStats.experience,
+        experienceToNextLevel: userStats.experienceToNextLevel,
+        lastPracticeDate: userStats.lastPracticeDate,
+        dailyGoal: userStats.dailyGoal,
+        weeklyGoal: userStats.weeklyGoal,
+        createdAt: userStats.createdAt,
+        updatedAt: userStats.updatedAt,
+        // Join with user information
+        userName: sql<string>`
+          (SELECT CONCAT(u.name) 
+           FROM ${users} u 
+           WHERE u.id = ${userStats.userId})
+        `,
+        userEmail: sql<string>`
+          (SELECT u.email 
+           FROM ${users} u 
+           WHERE u.id = ${userStats.userId})
+        `,
+        userAvatar: sql<string | null>`
+          (SELECT u.image 
+           FROM ${users} u 
+           WHERE u.id = ${userStats.userId})
+        `,
+      })
+      .from(userStats)
+      .orderBy(desc(userStats.totalPoints));
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return result.map(stats => ({
+      ...stats,
+      lastPracticeDate: stats.lastPracticeDate?.toISOString() || null,
+      createdAt: stats.createdAt?.toISOString() || null,
+      updatedAt: stats.updatedAt?.toISOString() || null,
+    }));
+  }
+
+  static async resetUserProgress(progressId: string) {
+    const result = await db
+      .update(userProgress)
+      .set({
+        completed: false,
+        score: 0,
+        attempts: 0,
+        completedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(userProgress.id, progressId))
+      .returning();
+
+    return result[0] || null;
   }
 }

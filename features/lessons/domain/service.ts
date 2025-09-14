@@ -1,6 +1,6 @@
 import { db } from '@/drizzle/db';
-import { lessons, userProgress } from '@/drizzle/schema';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { lessons, userProgress, modules, moduleLessons, users } from '@/drizzle/schema';
+import { and, desc, eq, sql, count } from 'drizzle-orm';
 import { CreateLessonPayload, UpdateLessonPayload, LessonFilter } from '../config/lesson.types';
 
 export class LessonService {
@@ -176,5 +176,66 @@ export class LessonService {
       )
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(lessons.order, lessons.createdAt);
+  }
+
+  // Admin-specific methods
+  static async getLessonsForAdmin(filter?: LessonFilter) {
+    const conditions = [];
+    
+    if (filter?.language) {
+      conditions.push(eq(lessons.language, filter.language));
+    }
+    if (filter?.type) {
+      conditions.push(eq(lessons.type, filter.type));
+    }
+    if (filter?.difficultyLevel) {
+      conditions.push(eq(lessons.difficultyLevel, filter.difficultyLevel));
+    }
+    if (filter?.isActive !== undefined) {
+      conditions.push(eq(lessons.isActive, filter.isActive));
+    }
+
+    const result = await db
+      .select({
+        id: lessons.id,
+        title: lessons.title,
+        description: lessons.description,
+        language: lessons.language,
+        type: lessons.type,
+        content: lessons.content,
+        audioUrl: lessons.audioUrl,
+        videoUrl: lessons.videoUrl,
+        imageUrl: lessons.imageUrl,
+        difficultyLevel: lessons.difficultyLevel,
+        estimatedDuration: lessons.estimatedDuration,
+        pointsReward: lessons.pointsReward,
+        isActive: lessons.isActive,
+        order: lessons.order,
+        prerequisites: lessons.prerequisites,
+        tags: lessons.tags,
+        createdAt: lessons.createdAt,
+        updatedAt: lessons.updatedAt,
+        // Join with module information
+        moduleTitle: sql<string | null>`
+          COALESCE(
+            (SELECT m.title 
+             FROM ${modules} m 
+             JOIN ${moduleLessons} ml ON m.id = ml.module_id 
+             WHERE ml.lesson_id = ${lessons.id} 
+             LIMIT 1), 
+            'No Module'
+          )
+        `,
+      })
+      .from(lessons)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(lessons.order, lessons.createdAt);
+
+    // Convert Date objects to ISO strings for JSON serialization
+    return result.map(lesson => ({
+      ...lesson,
+      createdAt: lesson.createdAt?.toISOString() || null,
+      updatedAt: lesson.updatedAt?.toISOString() || null,
+    }));
   }
 }

@@ -14,63 +14,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { AchievementFormDialog } from '../molecules/achievement-form-dialog';
+import { useAchievements, useDeleteAchievement } from '../../hooks/use-achievements';
+import { toast } from 'sonner';
 
-// Mock data for demo
-const mockAchievements = [
-  {
-    id: '1',
-    name: 'First Steps',
-    description: 'Complete your first lesson',
-    type: 'lessons_completed',
-    iconUrl: '',
-    pointsRequired: 0,
-    criteria: { lessonsCount: 1 },
-    isActive: true,
-    earnedCount: 150,
-    createdAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Week Warrior',
-    description: 'Maintain a 7-day learning streak',
-    type: 'streak',
-    iconUrl: '',
-    pointsRequired: 0,
-    criteria: { streakDays: 7 },
-    isActive: true,
-    earnedCount: 45,
-    createdAt: '2024-01-10T09:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'Perfect Score',
-    description: 'Get 100% on any quiz',
-    type: 'perfect_score',
-    iconUrl: '',
-    pointsRequired: 0,
-    criteria: { perfectScore: true },
-    isActive: true,
-    earnedCount: 87,
-    createdAt: '2024-01-05T08:00:00Z',
-  },
-  {
-    id: '4',
-    name: 'Daily Goal Master',
-    description: 'Complete your daily goal 30 times',
-    type: 'daily_goal',
-    iconUrl: '',
-    pointsRequired: 500,
-    criteria: { dailyGoalsCompleted: 30 },
-    isActive: false,
-    earnedCount: 12,
-    createdAt: '2024-01-01T08:00:00Z',
-  },
-];
-
-type Achievement = typeof mockAchievements[0];
+type Achievement = {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  iconUrl: string;
+  pointsRequired: number;
+  criteria: any;
+  isActive: boolean;
+  earnedCount: number;
+  createdAt: string;
+};
 
 export function AchievementsManagement() {
-  const [achievements, setAchievements] = useState<Achievement[]>(mockAchievements);
+  const { data: achievements = [], isLoading, error } = useAchievements();
+  const deleteAchievement = useDeleteAchievement();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
 
@@ -84,37 +46,21 @@ export function AchievementsManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (achievementId: string) => {
+  const handleDelete = async (achievementId: string) => {
     if (confirm('Are you sure you want to delete this achievement?')) {
-      setAchievements(achievements.filter(a => a.id !== achievementId));
+      try {
+        await deleteAchievement.mutateAsync(achievementId);
+        toast.success('Achievement deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete achievement');
+        console.error('Error deleting achievement:', error);
+      }
     }
   };
 
   const handleSave = (achievementData: any) => {
-    if (editingAchievement) {
-      // Update existing achievement
-      setAchievements(achievements.map(a => 
-        a.id === editingAchievement.id 
-          ? {
-              ...a,
-              ...achievementData,
-              // Always store createdAt as string
-              createdAt: typeof (achievementData.createdAt ?? a.createdAt) === 'string'
-                ? (achievementData.createdAt ?? a.createdAt)
-                : (achievementData.createdAt ?? a.createdAt).toISOString(),
-            }
-          : a
-      ));
-    } else {
-      // Add new achievement
-      const newAchievement = {
-        ...achievementData,
-        id: Date.now().toString(),
-        earnedCount: 0,
-        createdAt: new Date().toISOString(),
-      };
-      setAchievements([...achievements, newAchievement]);
-    }
+    // TODO: Implement save logic with API
+    console.log('Save achievement:', achievementData);
     setIsDialogOpen(false);
     setEditingAchievement(null);
   };
@@ -229,6 +175,17 @@ export function AchievementsManagement() {
     },
   ];
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load achievements</p>
+          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <AdminDataTable
@@ -238,6 +195,7 @@ export function AchievementsManagement() {
         columns={columns}
         onAdd={handleAdd}
         searchColumn="name"
+        isLoading={isLoading}
       />
       
       <AchievementFormDialog
