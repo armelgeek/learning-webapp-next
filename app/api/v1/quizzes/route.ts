@@ -1,43 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { getModulesWithProgressUseCase } from '@/features/modules/domain/use-cases/get-modules-with-progress.use-case';
-import { createModuleUseCase } from '@/features/modules/domain/use-cases/create-module.use-case';
-import type { Language } from '@/features/modules/config/module.types';
-import { createModuleSchema } from '@/features/modules/config/module.schema';
+import { getQuizzesUseCase } from '@/features/quizzes/domain/use-cases/get-quizzes.use-case';
+import { createQuizUseCase } from '@/features/quizzes/domain/use-cases/create-quiz.use-case';
+import { createQuizSchema, quizFilterSchema } from '@/features/quizzes/config/quiz.schema';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const language = searchParams.get('language');
+    const lessonId = searchParams.get('lessonId');
+    const type = searchParams.get('type');
 
-    if (!language) {
+    // Validate filter parameters
+    const filterResult = quizFilterSchema.safeParse({
+      lessonId: lessonId || undefined,
+      type: type || undefined,
+    });
+
+    if (!filterResult.success) {
       return NextResponse.json(
-        { error: 'Language parameter is required' },
+        { error: 'Invalid filter parameters', details: filterResult.error.format() },
         { status: 400 }
       );
     }
 
-    // Get user session for progress tracking
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
-
-    const userId = session?.user?.id;
-
-    // Get modules with progress
-    const result = await getModulesWithProgressUseCase(
-      language as Language,
-      userId
-    );
-
+    const result = await getQuizzesUseCase(filterResult.data);
+    
     if (!result.success) {
-      console.error('Error fetching modules:', result.error);
+      console.error('Error fetching quizzes:', result.error);
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
     return NextResponse.json(result.data);
   } catch (error) {
-    console.error('GET /api/modules error:', error);
+    console.error('GET /api/v1/quizzes error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -56,25 +51,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate request body
-    const validationResult = createModuleSchema.safeParse(body);
+    const validationResult = createQuizSchema.safeParse(body);
     
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid module data', details: validationResult.error.format() },
+        { error: 'Invalid quiz data', details: validationResult.error.format() },
         { status: 400 }
       );
     }
 
-    const result = await createModuleUseCase(validationResult.data);
+    const result = await createQuizUseCase(validationResult.data);
     
     if (!result.success) {
-      console.error('Error creating module:', result.error);
+      console.error('Error creating quiz:', result.error);
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
     return NextResponse.json(result.data, { status: 201 });
   } catch (error) {
-    console.error('POST /api/modules error:', error);
+    console.error('POST /api/v1/quizzes error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

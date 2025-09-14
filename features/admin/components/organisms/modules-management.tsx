@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AdminDataTable } from '../molecules/admin-data-table';
 import { ModuleFormDialog } from '../molecules/module-form-dialog';
-import { useAdminModules, useDeleteModule } from '../../hooks/use-admin-modules';
+import { useAdminModules, useDeleteModule, useCreateModule, useUpdateModule } from '../../hooks/use-admin-modules';
 import { toast } from 'sonner';
 
 type Module = {
@@ -35,6 +35,8 @@ type Module = {
 export function ModulesManagement() {
   const { data: modules = [], isLoading, error } = useAdminModules();
   const deleteModule = useDeleteModule();
+  const createModule = useCreateModule();
+  const updateModule = useUpdateModule();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
 
@@ -60,11 +62,23 @@ export function ModulesManagement() {
     }
   };
 
-  const handleSave = (moduleData: any) => {
-    // TODO: Implement save logic with API
-    console.log('Save module:', moduleData);
-    setIsDialogOpen(false);
-    setEditingModule(null);
+  const handleSave = async (moduleData: any) => {
+    try {
+      if (editingModule) {
+        // Update existing module
+        await updateModule.mutateAsync({ id: editingModule.id, ...moduleData });
+        toast.success('Module updated successfully');
+      } else {
+        // Create new module
+        await createModule.mutateAsync(moduleData);
+        toast.success('Module created successfully');
+      }
+      setIsDialogOpen(false);
+      setEditingModule(null);
+    } catch (error) {
+      toast.error(editingModule ? 'Failed to update module' : 'Failed to create module');
+      console.error('Error saving module:', error);
+    }
   };
 
   const columns: ColumnDef<Module>[] = [

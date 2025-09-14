@@ -7,7 +7,7 @@ export const createQuizSchema = z.object({
   question: z.string().min(1, 'Question is required'),
   options: quizOptionsSchema,
   correctAnswer: z.string().min(1, 'Correct answer is required'),
-  type: z.enum(['multiple_choice', 'flashcard']).default('multiple_choice'),
+  type: z.enum(['multiple_choice', 'flashcard', 'fill_blanks', 'translation', 'dictation', 'pronunciation']).default('multiple_choice'),
   explanation: z.string().optional(),
 });
 
@@ -23,5 +23,10 @@ export const quizAnswerSchema = z.object({
 
 export const quizFilterSchema = z.object({
   lessonId: z.string().optional(),
-  type: z.enum(['multiple_choice', 'flashcard']).optional(),
+  type: z.enum(['multiple_choice', 'flashcard', 'fill_blanks', 'translation', 'dictation', 'pronunciation']).optional(),
 });
+
+export type CreateQuizInput = z.infer<typeof createQuizSchema>;
+export type UpdateQuizInput = z.infer<typeof updateQuizSchema>;
+export type QuizAnswerInput = z.infer<typeof quizAnswerSchema>;
+export type QuizFilterInput = z.infer<typeof quizFilterSchema>;
