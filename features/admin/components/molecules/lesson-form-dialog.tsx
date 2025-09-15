@@ -333,7 +333,7 @@ export function LessonFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="" className="py-3">
+                        <SelectItem value="all" className="py-3">
                           <div className="flex items-center gap-2">
                             <span className="text-gray-400">🚫</span>
                             <div>

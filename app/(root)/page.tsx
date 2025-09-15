@@ -9,6 +9,7 @@ import { HomeFeaturesSection } from '@/shared/components/organisms/home-features
 import { HowItWorksSection } from '@/shared/components/organisms/how-it-works-section';
 import { LanguagesSection } from '@/shared/components/organisms/languages-section';
 import { TestimonialsSection } from '@/shared/components/organisms/testimonials-section';
+import NewsLetter from '@/shared/components/atoms/newsletter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -43,12 +44,32 @@ export default function Home() {
   // Show enhanced homepage for non-authenticated users
   if (!sessionLoading && !user) {
     return (
-      <div className="min-h-screen">
-        <Hero />
-        <HomeFeaturesSection />
-        <HowItWorksSection />
-        <LanguagesSection />
-        <TestimonialsSection />
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-blue-50 to-purple-50">
+        <main className="flex-1">
+          <div className="space-y-24">
+            <div className="animate-fade-in-up">
+              <Hero />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <HomeFeaturesSection />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <HowItWorksSection />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              <LanguagesSection />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <NewsLetter />
+            </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+              <TestimonialsSection />
+            </div>
+          </div>
+        </main>
+        <footer className="w-full py-8 bg-white/80 border-t border-gray-200 mt-12 text-center text-gray-500 text-sm">
+          © {new Date().getFullYear()} LinguaLearn. Made with <span className="text-pink-500">♥</span> for language lovers.
+        </footer>
       </div>
     );
   }
@@ -114,12 +135,32 @@ export default function Home() {
 
   // Fallback - show enhanced homepage
   return (
-    <div className="min-h-screen">
-      <Hero />
-      <HomeFeaturesSection />
-      <HowItWorksSection />
-      <LanguagesSection />
-      <TestimonialsSection />
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-blue-50 to-purple-50">
+      <main className="flex-1">
+        <div className="space-y-24">
+          <div className="animate-fade-in-up">
+            <Hero />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <HomeFeaturesSection />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <HowItWorksSection />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <LanguagesSection />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <NewsLetter />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+            <TestimonialsSection />
+          </div>
+        </div>
+      </main>
+      <footer className="w-full py-8 bg-white/80 border-t border-gray-200 mt-12 text-center text-gray-500 text-sm">
+        © {new Date().getFullYear()} LinguaLearn. Made with <span className="text-pink-500">♥</span> for language lovers.
+      </footer>
     </div>
   );
 }
