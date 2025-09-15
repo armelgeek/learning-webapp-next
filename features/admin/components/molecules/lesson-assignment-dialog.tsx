@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { 
   Select,
   SelectContent,
@@ -161,36 +161,35 @@ export function LessonAssignmentDialog({
 
   if (isLoading) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl">
-          <div className="flex items-center justify-center p-8">
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="w-[800px] max-w-[90vw] overflow-y-auto">
+          <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
               <p>Loading lessons...</p>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Manage Lessons - {moduleName}</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[800px] max-w-[90vw] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Manage Lessons - {moduleName}</SheetTitle>
+          <SheetDescription>
             Assign lessons to this module and reorder them as needed.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6 mt-6">
           {/* Assigned Lessons */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">
               Assigned Lessons ({assignedLessons.length})
             </h3>
-            
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="assigned-lessons">
                 {(provided) => (
@@ -217,7 +216,6 @@ export function LessonAssignmentDialog({
                               <div {...provided.dragHandleProps}>
                                 <GripVertical className="h-4 w-4 text-gray-400" />
                               </div>
-                              
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium text-sm truncate">
                                   {lesson.title}
@@ -231,7 +229,6 @@ export function LessonAssignmentDialog({
                                   </Badge>
                                 </div>
                               </div>
-                              
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -268,7 +265,7 @@ export function LessonAssignmentDialog({
                 Create New Lesson
               </Button>
             </div>
-            
+
             {/* Add Lesson Form */}
             <div className="flex gap-2">
               <Select value={selectedLessonId} onValueChange={setSelectedLessonId}>
@@ -326,7 +323,6 @@ export function LessonAssignmentDialog({
                         </span>
                       </div>
                     </div>
-                    
                     <Button
                       variant="outline"
                       size="sm"
@@ -345,21 +341,21 @@ export function LessonAssignmentDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <SheetFooter className="mt-6">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </SheetFooter>
+      </SheetContent>
 
-      {/* Lesson Creation Dialog */}
+      {/* Lesson Creation Sheet - now as sheet instead of dialog */}
       <LessonFormDialog
         open={isLessonFormOpen}
         onOpenChange={setIsLessonFormOpen}
         lesson={null}
         onSave={handleCreateLesson}
-        defaultModuleId={moduleId} // Pre-select the current module
+        defaultModuleId={moduleId}
       />
-    </Dialog>
+    </Sheet>
   );
 }

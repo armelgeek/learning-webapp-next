@@ -2,7 +2,6 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -45,7 +44,7 @@ const quizTypes = [
 interface QuizFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  quiz?: any;
+  quiz?: CreateQuizInput;
   onSave: (data: CreateQuizInput) => void;
 }
 

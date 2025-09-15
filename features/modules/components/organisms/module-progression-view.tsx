@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Map, Trophy, Star } from 'lucide-react';
 import { ModuleCard } from '../molecules/module-card';
 import { useModules } from '../../hooks/use-modules';
-import type { ModuleWithProgress } from '../../config/module.types';
 
 interface ModuleProgressionViewProps {
   language: string;
