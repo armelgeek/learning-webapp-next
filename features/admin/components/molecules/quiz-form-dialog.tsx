@@ -46,6 +46,7 @@ interface QuizFormDialogProps {
   onOpenChange: (open: boolean) => void;
   quiz?: CreateQuizInput;
   onSave: (data: CreateQuizInput) => void;
+  defaultLessonId?: string;
 }
 
 export function QuizFormDialog({
@@ -53,6 +54,7 @@ export function QuizFormDialog({
   onOpenChange,
   quiz,
   onSave,
+  defaultLessonId,
 }: QuizFormDialogProps) {
   // Fetch lessons from API instead of using mock data
   const { data: lessonsData, isLoading: lessonsLoading, error: lessonsError } = useLessons();
@@ -61,7 +63,7 @@ export function QuizFormDialog({
   const form = useForm<CreateQuizInput>({
     resolver: zodResolver(createQuizSchema),
     defaultValues: {
-      lessonId: quiz?.lessonId || '',
+      lessonId: quiz?.lessonId || defaultLessonId || '',
       question: quiz?.question || '',
       options: quiz?.options || ['Option 1', 'Option 2'],
       correctAnswer: quiz?.correctAnswer || '',

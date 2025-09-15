@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Sheet,
   SheetContent,
@@ -52,7 +53,7 @@ export function LessonAssignmentDialog({
   onOpenChange 
 }: LessonAssignmentProps) {
   const queryClient = useQueryClient();
-  const [selectedLessonId, setSelectedLessonId] = useState<string>('');
+  const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
   const [isLessonFormOpen, setIsLessonFormOpen] = useState(false);
   const createLesson = useCreateLesson();
 
@@ -72,14 +73,14 @@ export function LessonAssignmentDialog({
       const response = await axios.post(`/api/modules/${moduleId}/lessons`, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['module-lessons', moduleId] });
       queryClient.invalidateQueries({ queryKey: ['admin-modules'] });
-      toast.success('Lesson assigned successfully');
-      setSelectedLessonId('');
+      toast.success(`${data.assigned || selectedLessonIds.length} lesson(s) assigned successfully`);
+      setSelectedLessonIds([]);
     },
     onError: () => {
-      toast.error('Failed to assign lesson');
+      toast.error('Failed to assign lesson(s)');
     },
   });
 
@@ -104,12 +105,15 @@ export function LessonAssignmentDialog({
   const assignedLessons: Lesson[] = moduleData?.assigned || [];
   const availableLessons: Lesson[] = moduleData?.available || [];
 
-  const handleAssignLesson = () => {
-    if (!selectedLessonId) return;
+  const handleAssignLessons = () => {
+    if (selectedLessonIds.length === 0) return;
+    
+    // Calculate orders starting from current lesson count
+    const orders = selectedLessonIds.map((_, index) => assignedLessons.length + index);
     
     assignLessonMutation.mutate({
-      lessonIds: [selectedLessonId],
-      orders: [assignedLessons.length],
+      lessonIds: selectedLessonIds,
+      orders: orders,
     });
   };
 
@@ -157,6 +161,23 @@ export function LessonAssignmentDialog({
       toast.error('Failed to create lesson');
       console.error('Error creating lesson:', error);
     }
+  };
+
+  const toggleLessonSelection = (lessonId: string) => {
+    setSelectedLessonIds(prev => 
+      prev.includes(lessonId) 
+        ? prev.filter(id => id !== lessonId)
+        : [...prev, lessonId]
+    );
+  };
+
+  const selectAllVisibleLessons = () => {
+    const allIds = availableLessons.map(lesson => lesson.id);
+    setSelectedLessonIds(allIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedLessonIds([]);
   };
 
   if (isLoading) {
@@ -266,33 +287,52 @@ export function LessonAssignmentDialog({
               </Button>
             </div>
 
-            {/* Add Lesson Form */}
-            <div className="flex gap-2">
-              <Select value={selectedLessonId} onValueChange={setSelectedLessonId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select a lesson to assign" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableLessons.map((lesson) => (
-                    <SelectItem key={lesson.id} value={lesson.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{lesson.title}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {lesson.type}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleAssignLesson}
-                disabled={!selectedLessonId || assignLessonMutation.isPending}
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Assign
-              </Button>
+            {/* Multiple Selection Controls */}
+            <div className="space-y-3">
+              {selectedLessonIds.length > 0 && (
+                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <span className="text-sm font-medium text-blue-900">
+                    {selectedLessonIds.length} lesson(s) selected
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleAssignLessons}
+                      disabled={assignLessonMutation.isPending}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Assign Selected
+                    </Button>
+                    <Button
+                      onClick={clearSelection}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <Button
+                  onClick={selectAllVisibleLessons}
+                  variant="outline"
+                  size="sm"
+                  disabled={availableLessons.length === 0}
+                >
+                  Select All ({availableLessons.length})
+                </Button>
+                <Button
+                  onClick={clearSelection}
+                  variant="outline"
+                  size="sm"
+                  disabled={selectedLessonIds.length === 0}
+                >
+                  Clear Selection
+                </Button>
+              </div>
             </div>
 
             {/* Available Lessons List */}
@@ -302,40 +342,61 @@ export function LessonAssignmentDialog({
                   All lessons are assigned
                 </div>
               ) : (
-                availableLessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="flex items-center gap-2 p-3 bg-gray-50 border rounded-lg"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {lesson.title}
-                      </div>
-                      <div className="flex gap-1 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {lesson.type}
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          {lesson.difficultyLevel}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          {lesson.estimatedDuration}min
-                        </span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedLessonId(lesson.id);
-                        handleAssignLesson();
-                      }}
-                      disabled={assignLessonMutation.isPending}
+                availableLessons.map((lesson) => {
+                  const isSelected = selectedLessonIds.includes(lesson.id);
+                  return (
+                    <div
+                      key={lesson.id}
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-50 border-blue-200' 
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                      onClick={() => toggleLessonSelection(lesson.id)}
                     >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleLessonSelection(lesson.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">
+                          {lesson.title}
+                        </div>
+                        <div className="flex gap-1 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {lesson.type}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {lesson.difficultyLevel}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {lesson.estimatedDuration}min
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLessonSelection(lesson.id);
+                          // If not selected, add it and assign immediately
+                          if (!isSelected) {
+                            assignLessonMutation.mutate({
+                              lessonIds: [lesson.id],
+                              orders: [assignedLessons.length],
+                            });
+                          }
+                        }}
+                        disabled={assignLessonMutation.isPending}
+                        className="opacity-70 hover:opacity-100"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

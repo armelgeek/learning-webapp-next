@@ -28,12 +28,6 @@ export default function LessonsPage() {
     alert(`Starting module: ${moduleId}`);
   };
 
-  const handleStartLesson = (lessonId: string) => {
-    // Navigate to the specific lesson
-    // For now, just show an alert
-    alert(`Starting lesson: ${lessonId}`);
-  };
-
   const handleSetLanguagePreference = () => {
     // Navigate to language preference settings
     // This could be enhanced to navigate to a profile/settings page
@@ -94,13 +88,12 @@ export default function LessonsPage() {
           Complete modules in order to unlock new content and progress through your learning journey.
         </p>
       </div>
-            <ModuleProgressionView
-              language={selectedLanguage}
-              languageName={LANGUAGES[selectedLanguage as LanguageKey]?.name || 'Language'}
-              languageFlag={LANGUAGES[selectedLanguage as LanguageKey]?.flag || ''}
-              onStartModule={handleStartModule}
-            />
-          
+      <ModuleProgressionView
+        language={selectedLanguage}
+        languageName={LANGUAGES[selectedLanguage as LanguageKey]?.name || 'Language'}
+        languageFlag={LANGUAGES[selectedLanguage as LanguageKey]?.flag || ''}
+        onStartModule={handleStartModule}
+      />
     </div>
   );
 }

@@ -190,7 +190,14 @@ export function QuizzesManagement() {
       <QuizFormDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        quiz={editingQuiz}
+        quiz={editingQuiz ? {
+          lessonId: editingQuiz.lessonId,
+          question: editingQuiz.question,
+          options: editingQuiz.options,
+          correctAnswer: editingQuiz.correctAnswer,
+          type: editingQuiz.type as any, // Cast to the expected enum type
+          explanation: editingQuiz.explanation,
+        } : undefined}
         onSave={handleSave}
       />
     </>

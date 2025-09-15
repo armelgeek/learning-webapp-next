@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, MoreHorizontal, BookOpen, Link, Plus } from 'lucide-react';
+import { Eye, Edit, Trash2, MoreHorizontal, BookOpen, Link, Plus, HelpCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import { AdminDataTable } from '../molecules/admin-data-table';
 import { ModuleFormDialog } from '../molecules/module-form-dialog';
 import { LessonAssignmentDialog } from '../molecules/lesson-assignment-dialog';
 import { LessonFormDialog } from '../molecules/lesson-form-dialog';
+import { QuizAssignmentDialog } from '../molecules/quiz-assignment-dialog';
 import { ModulePrerequisiteDialog } from '../molecules/module-prerequisite-dialog';
 import { useAdminModules, useDeleteModule, useCreateModule, useUpdateModule } from '../../hooks/use-admin-modules';
 import { useCreateLesson } from '../../hooks/use-admin-lessons';
@@ -45,6 +46,7 @@ export function ModulesManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [lessonAssignmentOpen, setLessonAssignmentOpen] = useState(false);
+  const [quizAssignmentOpen, setQuizAssignmentOpen] = useState(false);
   const [prerequisiteDialogOpen, setPrerequisiteDialogOpen] = useState(false);
   const [lessonFormOpen, setLessonFormOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
@@ -67,6 +69,11 @@ export function ModulesManagement() {
   const handleManagePrerequisites = (module: Module) => {
     setSelectedModule(module);
     setPrerequisiteDialogOpen(true);
+  };
+
+  const handleManageQuizzes = (module: Module) => {
+    setSelectedModule(module);
+    setQuizAssignmentOpen(true);
   };
 
   const handleAddLesson = (module: Module) => {
@@ -214,6 +221,10 @@ export function ModulesManagement() {
                   <BookOpen className="mr-2 h-4 w-4" />
                   Manage Lessons
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleManageQuizzes(module)}>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Manage Quizzes
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleManagePrerequisites(module)}>
                   <Link className="mr-2 h-4 w-4" />
                   Prerequisites
@@ -282,6 +293,13 @@ export function ModulesManagement() {
             moduleName={selectedModule.title}
             open={prerequisiteDialogOpen}
             onOpenChange={setPrerequisiteDialogOpen}
+          />
+
+          <QuizAssignmentDialog
+            moduleId={selectedModule.id}
+            moduleName={selectedModule.title}
+            open={quizAssignmentOpen}
+            onOpenChange={setQuizAssignmentOpen}
           />
 
           <LessonFormDialog
